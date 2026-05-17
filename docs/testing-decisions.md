@@ -255,6 +255,69 @@ Scenario 02's content-judge residuals (4 fails + 1 partial out of 9) are the sam
 
 ---
 
+## 2026-05-17 — In-loop hook layer: schema validation as the agent writes (cross-cutting)
+
+**Finding.** After the multiple late-day passes above closed the schema / rubric / prompt gaps, scenario 02 still failed on `no_orphan_evidence` at end-of-scenario — 4 untagged claims in `decisions/2026-05-19-q4-roadmap-commit.md`. Same shape as scenarios 05, 07, 10 had earlier: the agent paraphrases a claim from an ingestion file into an Evidence row and forgets the provenance tag. The COUNT-THE-TAGS pre-save self-check in the schema preamble reduced the rate but didn't eliminate it — the agent has nothing forcing it to actually do the count.
+
+The structural sweep catches these at end-of-scenario, but by then the agent has moved on and the failure is fossilized. The fix needs to be in the loop, not after it.
+
+**Decision.** Added a `PostToolUse` hook at [`.claude/skills/pm-brain/scaffold/.claude/hooks/validate_brain_file.py`](../.claude/skills/pm-brain/scaffold/.claude/hooks/validate_brain_file.py) wired via [`.claude/skills/pm-brain/scaffold/.claude/settings.json`](../.claude/skills/pm-brain/scaffold/.claude/settings.json). It runs after every Write/Edit. When the agent saves a brain file, the hook validates it and either blocks (exit 2) or warns (exit 0 + stderr). Claude Code surfaces the message to the agent in the same turn so the agent fixes before moving on. Mirrored to `example-brain/.claude/` per scaffold-mirror rule.
+
+**Two-tier severity, and why.** The single most important design choice. Blocking on every link miss would penalize legitimate ordering — a hypothesis written before its matching `source/` file, two files that reference each other and can't both be created in one tool call. So:
+
+- **BLOCK (exit 2)** only on the failure mode that's always self-contained: evidence row with NO provenance attempt — no enum tag AND no `[ingestion/...]` / `[source/...]` link of any kind. Adding `(intuition, PM, <date>)` requires nothing external; the agent can always fix in-turn.
+- **WARN (exit 0 + stderr)** on broken internal links and path-typed provenance links that don't resolve yet. These are almost always ordering issues. The agent sees the message, can fix when the dependency lands. The end-of-scenario structural sweep is still hard-failing — nothing slips through silently.
+
+This split was prompted directly by the realization that the validator could block the agent on cases the agent can't fix (mutual references, forward references). The tier separates "things the agent can fix right now" from "things that might fix themselves on the next write."
+
+**Standalone, not harness-dependent.** The hook script is self-contained Python — no imports from `tests/harness/`. It re-implements `_row_has_provenance`, `_iter_evidence_rows`, `_iter_bold_evidence_rows`, `_strip_code_spans`, the provenance enum regexes, and the placeholder regexes inline. This is deliberate: the scaffold ships into every user's brain, and the user shouldn't need the test harness installed for the hook to run. The duplication is real but small (~250 lines) and the contract it enforces is the same one the structural sweep enforces, so both sides drift together if either changes.
+
+**Discovery: find_work_dir walks up looking for a brain root.** A brain root is a directory containing `INDEX.md` or `CLAUDE.md` AND at least two of the canonical top-level dirs (`hypotheses/`, `decisions/`, `knowledge/`, `ingestion/`, `source/`, `stakeholders/`). This handles the harness's TemporaryDirectory layout, the user's home-directory brain, and brains nested inside larger repos. Files written outside any recognized brain root → silently ignored (exit 0).
+
+**Tested deterministically.** [`tests/harness/checks/test_hook_validator.py`](../tests/harness/checks/test_hook_validator.py) — 13 cases covering pass / block / warn × every recognized exemption (`_SCHEMA.md`, `INDEX.md`, non-brain files, files outside a brain root, empty stdin payload). Each case invokes the hook as a subprocess (the same way Claude Code does) with a JSON payload on stdin, then asserts on exit code + stderr substring. Runs in ~5 seconds, no LLM calls. Result: **13/13 cases pass**.
+
+**Why this isn't redundant with the structural check.** Same vocabulary, same enum, same regex — but different *moment*. The structural check is end-of-scenario forensics: it tells you what went wrong after the agent has finished. The hook is in-loop guidance: it tells the agent what to fix while the agent is still in the relevant write. Both are needed:
+
+- The hook catches in-turn-fixable failures and converts them into feedback the agent acts on immediately.
+- The structural check catches anything the hook downgraded to warning (ordering issues that never got resolved), anything the hook missed entirely (e.g. cross-file invariants the hook deliberately doesn't try to enforce per-write), and any scaffold drift between the hook's copy of the regexes and the harness's copy of the regexes.
+
+**Why this isn't over-fitting.** The hook enforces only what the schema already requires. It doesn't add new rules, doesn't ask the agent to be more diligent, doesn't reach into business judgment. It mechanically catches a single failure mode — orphan evidence rows — that scaffold-prompt iterations alone could not close past 90%. The orphan check it enforces is the same one the structural sweep was already enforcing; the change is *when* the check fires, not *what* it checks.
+
+**Files touched.** [`scaffold/.claude/hooks/validate_brain_file.py`](../.claude/skills/pm-brain/scaffold/.claude/hooks/validate_brain_file.py) (new, ~250 lines), [`scaffold/.claude/settings.json`](../.claude/skills/pm-brain/scaffold/.claude/settings.json) (new, 14 lines), [`example-brain/.claude/hooks/validate_brain_file.py`](../example-brain/.claude/hooks/validate_brain_file.py) + [`example-brain/.claude/settings.json`](../example-brain/.claude/settings.json) (mirrors), [`tests/harness/checks/test_hook_validator.py`](../tests/harness/checks/test_hook_validator.py) (new, 13 cases, 13/13 pass), [`docs/testing.md`](./testing.md) (added Hook (in-loop) row to the three-layer table + new "The hook layer" section).
+
+---
+
+## 2026-05-18 — Coverage gap closure: scenarios 14–17 + onboarding walkthrough
+
+**Finding.** Three lifecycle moves and one onboarding path were uncovered after scenarios 01–13 stabilized:
+
+1. **Greenfield install** — what happens when a PM runs `/pm-brain` in an empty directory. Did interview happen, did scaffold land, did the post-scaffold self-test run, did the agent commit locally?
+2. **Cross-tier evidence hierarchy** — documented decision with audit trail vs verbal CEO claim. Existing scenarios (01, 03) covered contradictions *between documented sources*; nothing covered the higher-stakes case of a verbal claim against a documented decision.
+3. **Structural rot recovery** — what `/review` does when the brain is already in a broken state (planted defects: orphan evidence row, missing reversal condition, dead link, silent demotion). Existing scenarios all assumed a clean starting state.
+4. **No-artifact flow** — every prior scenario fed the brain an artifact. Real PM days include intuition-only signals, verbal engineering pushback, and industry-pattern observations with no doc behind them. Scenario 17 tests whether the soft-evidence-only path produces a `proposed`-status hypothesis with the correct trust profile (single-channel, no fabricated source/ file) or whether the agent over-promotes on weak evidence.
+
+**Decision.** Added four scenarios (`14-install-greenfield`, `15-evidence-hierarchy`, `16-corrupt-state-recovery`, `17-no-artifact-flow`) and four scenario-specific judge rubrics (`evidence_hierarchy_respected`, `structural_audit_surfaced`, `repair_with_audit_trail`, `no_artifact_trust_profile`). Each scenario covers a lifecycle move not in 01–13, not a variant of one already covered.
+
+Also added an onboarding doc surface: [`docs/walkthrough.md`](./walkthrough.md) (5-day story) + [`docs/glossary.md`](./glossary.md) (every term in plain English) + first-use glosses in [`README.md`](../README.md), [`tests/README.md`](../tests/README.md), and [`tests/TESTING.md`](../tests/TESTING.md). The pre-existing technical doc ([`how-it-works.md`](./how-it-works.md)) is now positioned as the "with files and folders" version, complementing the storytelling walkthrough.
+
+**Why this isn't scope creep.** Every new scenario closes a documented gap in the lifecycle-move coverage table. Every new doc page exists because user feedback flagged that PMs (the intended readers) bounced off terms like *ingestion* and *provenance* without a plain-English on-ramp. The skill itself was not changed in this batch — only the eval suite + docs.
+
+**Files touched.** `tests/scenarios/14-install-greenfield/{README.md, inputs/, expected.yaml}`, `tests/scenarios/15-evidence-hierarchy/{README.md, inputs/, expected.yaml}`, `tests/scenarios/16-corrupt-state-recovery/{README.md, inputs/, expected.yaml}`, `tests/scenarios/17-no-artifact-flow/{README.md, inputs/, expected.yaml}`, `tests/harness/judges/{evidence_hierarchy_respected.md, structural_audit_surfaced.md, repair_with_audit_trail.md, no_artifact_trust_profile.md}`, `docs/walkthrough.md` (new), `docs/glossary.md` (new), `README.md` (tightened), `tests/README.md` (gloss), `tests/TESTING.md` (gloss).
+
+---
+
+## 2026-05-18 — `staleness_flagged` judge fix: "Surfacing drift — cite, don't paraphrase" (scenario 03)
+
+**Finding.** On a first scenario 03 run after the coverage-closure batch, structural assertions all passed (19/19) and 4 of 5 content judges passed (`hypothesis_proposed_not_promoted`, `contradiction_surfaced`, `decision_provenance`, `audit_trail`). `staleness_flagged` failed: the agent correctly made the drift the headline finding of `/review` and correctly did NOT change the hypothesis status, but paraphrased the contradicting evidence as "the feature failed its core premise" instead of citing the specific May 17 signals (bidirectional sync harmful, WTP collapsed, outcome metric unchanged, champion considering switching off). The judge's criterion ("name specific contradicting signals, don't paraphrase the conclusion") is exactly the bar a `/review` *should* meet, so relaxing the rubric would have hidden a real behavior gap.
+
+**Decision.** Added a new section "Surfacing drift — cite, don't paraphrase" to [`scaffold/.claude/commands/review.md`](../.claude/skills/pm-brain/scaffold/.claude/commands/review.md) and mirrored to [`example-brain/.claude/commands/review.md`](../example-brain/.claude/commands/review.md). The section tells the agent that when surfacing drift on a `promoted` / `validated` hypothesis or `decided` decision, it must: (a) name each contradicting signal individually with date + link, (b) explicitly distinguish "artifacts still valid as artifacts" from "claim no longer matches the world," (c) NOT change status or write a new decision in the same turn (annotations are valid surfacing; resolution is the next turn).
+
+**Why this isn't over-fitting to one judge.** The rule is a generalization of how drift should be surfaced in any `/review`, not a recipe for the scenario-03-specific signals. The judge's rubric quotes those signals only as a worked example of what "specific" means — the rule is "cite the actual contradicting claims with audit links," and that applies to every drift surfacing the brain will ever do. The fix is also consistent with rules already in `CLAUDE.md` (Type B output shape: "name contradictions explicitly — do not flatten dissent into 'diverse feedback'"). The `/review` doc just lacked the same explicit reminder for the drift-surfacing case.
+
+**Files touched.** [`scaffold/.claude/commands/review.md`](../.claude/skills/pm-brain/scaffold/.claude/commands/review.md), [`example-brain/.claude/commands/review.md`](../example-brain/.claude/commands/review.md) (mirror).
+
+---
+
 ## Template for future entries
 
 ```markdown

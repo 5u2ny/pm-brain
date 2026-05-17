@@ -2,6 +2,8 @@
 
 This is the **detailed** testing doc: scenario format, harness internals, ground-truth schema, cost behavior, current coverage, gaps before publishable, and how to add a scenario.
 
+> A note on vocabulary. A *brain* is the folder of markdown files the skill maintains for a PM. *Ingesting* something means feeding it into the brain. *Provenance* is the tag on each claim that says where it came from (documented interview, verbal claim, hunch, etc.). A *hypothesis* is a statement the brain tracks evidence for. Full definitions live in the [glossary](../docs/glossary.md).
+
 For the 90-second version, see [`README.md` § Tests](../README.md#tests) and [`tests/README.md`](./README.md).
 For the design rationale (why scenarios over per-turn unit tests, why LLM-as-judge is reserved), see [`docs/testing.md`](../docs/testing.md).
 

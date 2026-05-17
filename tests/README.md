@@ -1,6 +1,8 @@
 # tests/
 
-Eval suite for the PM Brain skill. Runs synthetic scenarios through `claude -p` and asserts the brain's state after each turn.
+Eval suite for the PM Brain skill. A *scenario* here is a short, scripted story we feed the skill — a sequence of interviews, meetings, or messages — so we can check that the resulting **brain** (the folder of markdown files the skill maintains) ends up the way it should. The check happens after every turn.
+
+> New to PM Brain terms? The [glossary](../docs/glossary.md) covers *brain*, *ingest*, *provenance*, *hypothesis*, *decision file*, *audit trail* — anything that shows up in this doc and isn't obvious.
 
 This file is the **operator-level quickstart**. For everything else — scenario format, ground-truth schema, harness internals, assumptions, full coverage / gap list, and how to add a scenario — see [`TESTING.md`](./TESTING.md). Design rationale lives in [`../docs/testing.md`](../docs/testing.md).
 
@@ -42,14 +44,14 @@ tests/
 
 ## What a scenario looks like
 
-A scenario is an ordered stream of synthetic PM artifacts (turns) with ground-truth assertions about what the brain's state should look like after each turn.
+A scenario is an ordered stream of synthetic PM artifacts (we call them *turns*) plus assertions about what should be true after each turn.
 
-Each turn under `inputs/` is a single file: an interview transcript, a meeting note, an analytics screenshot description, a Slack thread, a competitor changelog. The harness replays them in filename order.
+Each turn under `inputs/` is a single file: an interview transcript, a meeting note, an analytics screenshot description, a Slack thread, a competitor changelog. The harness replays them in filename order, calling the skill on each one as if a real PM had just dropped it in.
 
-`expected.yaml` declares per-turn and final-state assertions. Two kinds:
+`expected.yaml` declares the assertions. Two kinds:
 
-- **Structural** — Python asserts on the file system. Deterministic, fast, free.
-- **Content** — LLM-judge calls with a tight rubric. Non-deterministic, costs money. Use sparingly.
+- **Structural** — file-system checks (does this hypothesis file exist? did the decision file get updated?). Deterministic, fast, free.
+- **Content** — LLM-judge calls with a tight rubric (did the brain surface the contradiction? did the synthesis tag provenance correctly?). Non-deterministic, costs money. Reserved for things a structural check can't answer.
 
 See [`docs/testing.md § Scenario format`](../docs/testing.md#scenario-format) for the full ground-truth schema.
 

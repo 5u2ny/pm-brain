@@ -6,11 +6,61 @@ PM Brain's value is *trajectory over time*, not single-step output. Testing one 
 
 | Layer | Checks | Tool | Determinism | Cost |
 |---|---|---|---|---|
+| **Hook (in-loop)** | Real-time schema validation as the agent writes brain files. Blocks orphan-evidence rows in-turn; warns on ordering issues | Standalone Python script invoked via Claude Code `PostToolUse` hook | Deterministic | Free |
 | **Structural** | File schema, INDEX updates, evidence rows exist, no orphan refs, link integrity | Python asserts | Deterministic | Free |
 | **Content** | Did the right hypothesis get promoted? Is the contradiction text semantically what we expected? | `claude -p` as judge with tight rubric | Non-deterministic | LLM tokens per assertion |
 | **Convergence** | Across N runs of the same scenario, what's the pass rate per assertion? | Run-level statistics | Statistical | N × per-run cost |
 
 The biggest mistake here is using LLM-as-judge for things a structural assertion can answer. Schema validity + file presence = Python asserts. "Did the promoted hypothesis text match the ground-truth meaning" = judge call. Save the judge budget for what actually needs judgment.
+
+## The hook layer (catch schema errors in-loop, not at end-of-scenario)
+
+The scaffold ships a `PostToolUse` hook at [`.claude/skills/pm-brain/scaffold/.claude/hooks/validate_brain_file.py`](../.claude/skills/pm-brain/scaffold/.claude/hooks/validate_brain_file.py), wired via [`.claude/skills/pm-brain/scaffold/.claude/settings.json`](../.claude/skills/pm-brain/scaffold/.claude/settings.json). It runs after every Write/Edit. When the agent saves a brain file with a schema violation, the hook surfaces feedback the agent sees in the same turn — instead of the failure only appearing at end-of-scenario when the agent has already moved on.
+
+**Two-tier severity** — this is the load-bearing design choice. Blocking on every link miss would penalize legitimate ordering (a hypothesis written before its matching `source/` file, two files that reference each other and can't both be written in one tool call).
+
+| Severity | Triggers | Why this tier |
+|---|---|---|
+| **BLOCK (exit 2)** | Evidence row with NO provenance attempt — no enum tag AND no `[ingestion/...]` / `[source/...]` link. | Always fixable in-turn. Adding `(intuition, PM, <date>)` requires nothing external. |
+| **WARN (exit 0 + stderr)** | Broken internal links. Path-typed provenance links that don't resolve yet. | Most likely an ordering issue. Agent sees the message, can fix when the target file lands. The end-of-scenario structural sweep is still hard-failing — nothing slips through silently. |
+
+The hook is mirrored to `example-brain/.claude/` per the scaffold-mirror rule in the repo `CLAUDE.md`.
+
+### Unit-testing the hook itself
+
+The hook is load-bearing — if it false-positives on legitimate ordering, scenarios stall; if it false-negatives on real orphans, the failure mode it was built for slips through. So it has its own deterministic test suite at [`tests/harness/checks/test_hook_validator.py`](../tests/harness/checks/test_hook_validator.py).
+
+Each case:
+1. Builds a fresh minimal brain fixture (hypotheses/ + decisions/ + source/ + ingestion/ + INDEX.md + CLAUDE.md) in a TemporaryDirectory.
+2. Writes one or more synthetic markdown files into it.
+3. Invokes the hook *as a subprocess* — exactly how Claude Code invokes it — by piping a `{"tool_input": {"file_path": "..."}}` JSON payload to its stdin.
+4. Asserts on exit code AND (optionally) a substring of stderr.
+
+The 13 cases cover the full severity matrix and every recognized exemption:
+
+| Case | Fixture | Expected |
+|---|---|---|
+| All five enum forms + a resolvable path-typed link | hypothesis with each provenance shape | exit 0, no stderr |
+| Untagged claims under `Evidence for:` | hypothesis with bare claims | exit 2, stderr says BLOCKING |
+| Path-typed link to a source file that doesn't exist yet | hypothesis written before its source artifact | exit 0, stderr says warnings |
+| Broken non-evidence internal link | reference link with no target | exit 0, stderr says warnings |
+| All known placeholder shapes (`(none yet)`, TBD, N/A, `*(none from current sources)*`, parenthetical with explanation, bare `—`) | hypothesis with empty-evidence markers | exit 0, no stderr |
+| Bold-label evidence rows (`- **Evidence for:**` indented sub-bullets) with orphans | risk-area schema shape | exit 2, stderr says BLOCKING |
+| Decision file with valid provenance | decision with stakeholder-verbal + resolvable link | exit 0, no stderr |
+| Decision file with orphan evidence | decision with bare claims | exit 2, stderr says BLOCKING |
+| Non-brain file (`knowledge/strategy.md`) with untagged bullets | the audit doesn't apply outside hypotheses/ + decisions/ | exit 0, no stderr |
+| `_SCHEMA.md` and `INDEX.md` | template files are exempt | exit 0, no stderr |
+| File outside any brain root (no `INDEX.md`/`CLAUDE.md` markers) | hook can't find a work_dir | exit 0, no stderr |
+| Empty / malformed stdin payload | defensive fallback when no file_path | exit 0, no stderr |
+
+Run the hook tests anytime — they're fast and free:
+
+```bash
+cd tests/harness && python -m checks.test_hook_validator
+# Output:  13/13 cases passed.
+```
+
+These tests are the regression guard for the hook's two-tier contract. If a future change to `validate_brain_file.py` accidentally starts blocking on ordering, the warn-only cases catch it; if it stops catching real orphans, the BLOCK cases catch it.
 
 ## Scenario format
 

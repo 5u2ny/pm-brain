@@ -15,7 +15,8 @@ Start here. Every task begins by routing through this file.
 | Hypotheses | [hypotheses/](./hypotheses/) | Pre-ship feature work, experiment design, post-launch evaluation |
 | Decisions | [decisions/](./decisions/) | Anything that commits future effort or reverses a prior choice |
 | Rules | [rules/](./rules/) | How this PM runs discovery, prioritization, shipping, writing |
-| Ingestion | [ingestion/](./ingestion/) | Customer interviews, meeting notes, market intel, ad-hoc dumps |
+| Ingestion | [ingestion/](./ingestion/) | Customer interviews, meeting notes, market intel, ad-hoc dumps — synthesized records |
+| Source | [source/](./source/) | Verbatim audit anchors for every ingested artifact — never edited |
 | Maintenance | [maintenance/](./maintenance/) | Weekly/periodic system reviews |
 
 ## Workflows

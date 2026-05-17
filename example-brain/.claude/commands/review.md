@@ -33,6 +33,18 @@ The six standard checks, with counts and the top item in each:
 
 Compression is additive. Minority signals are preserved. Archive extracts durable lessons before removing.
 
+## Surfacing drift — cite, don't paraphrase
+
+When `/review` flags drift on a `promoted` / `validated` hypothesis or a `decided` decision — i.e. fresh evidence has appeared that contradicts the original premise — the surfacing must **name the specific contradicting signals**, not paraphrase the conclusion.
+
+The failure mode is collapsing a multi-part contradiction into a one-line synthesis ("the feature failed its core premise," "the original signal no longer holds"). That hides the audit trail and gives the PM nothing to verify. Instead:
+
+- **Quote or name each contradicting signal individually** — by the specific claim it makes (e.g., "bidirectional sync is harmful to the workflow," "WTP collapsed from $150 to $30," "the outcome metric did not move," "the original champion is considering switching it off"), with the date and a link back to the ingestion record.
+- **Distinguish two layers explicitly**: (a) "the original artifacts remain valid as artifacts — that interview really happened and that decision was justified by the evidence at the time"; (b) "the *claim* those artifacts supported no longer matches the world." Both true; both belong in the surfacing.
+- **Do not resolve in this turn.** The status field stays where it is. No new decision file is written. The point of the review is to make the drift visible — resolution is the next turn's job, with the PM in the loop.
+
+Annotations under existing files (a new row under `Evidence against:`, a note under `Risks` / `Open questions / caveats:`, a recommendation in the response text that the PM consider demotion next turn) are valid surfacing. Status changes and new `decisions/` files are not.
+
 ## Decision-scoped /review — relevance filter on cadence flags
 
 When the PM frames `/review` around a specific decision in flight ("anything I should be aware of as I draft the X decision this week?"), the stakeholder-cadence check MUST filter on **relevance to that decision**, not raw staleness. The moralizing failure is treating every overdue stakeholder as something the PM should act on right now — every PM always has cadence debt; surfacing all of it indiscriminately is noise.

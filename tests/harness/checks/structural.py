@@ -81,6 +81,56 @@ def file_modified_or_created(work_dir: Path, path: str, snapshots=None) -> dict:
         else file_exists(work_dir, path)
 
 
+def file_contains_any(work_dir: Path, arg: str, snapshots=None) -> dict:
+    """
+    Check that at least one of the resolved files contains at least one of the substrings.
+
+    YAML form:
+        file_contains_any: <path_or_glob_alternatives> ; <substr1> OR <substr2> OR ...
+
+    Examples:
+        file_contains_any: knowledge/strategy.md ; telemetron OR north-star
+        file_contains_any: CLAUDE.md ; act and tell
+        file_contains_any: knowledge/org/tools.md OR rules/data.md ; posthog OR linear OR intercom
+
+    Path alternatives use the same ' OR ' / ',' splitter as file_exists_glob.
+    Substring matching is case-insensitive. A single ';' separates the two halves.
+    """
+    if not arg or ";" not in arg:
+        return _result(
+            f"file_contains_any:{arg}",
+            False,
+            "malformed: expected '<path_or_glob> ; <substr1> OR <substr2> ...'",
+        )
+    path_part, _, substr_part = arg.partition(";")
+    path_alternatives = _split_alternatives(path_part.strip())
+    substr_alternatives = [s.strip().lower() for s in re.split(r"\s+OR\s+", substr_part.strip()) if s.strip()]
+    if not substr_alternatives:
+        return _result(f"file_contains_any:{arg}", False, "no substrings to match")
+
+    matched_files: list[str] = []
+    for alt in path_alternatives:
+        for match in work_dir.glob(alt):
+            if not match.is_file():
+                continue
+            try:
+                body = match.read_text(encoding="utf-8", errors="replace").lower()
+            except OSError:
+                continue
+            if any(s in body for s in substr_alternatives):
+                matched_files.append(str(match.relative_to(work_dir)).replace("\\", "/"))
+
+    passed = len(matched_files) > 0
+    return _result(
+        f"file_contains_any:{arg}",
+        passed,
+        "" if passed else (
+            f"no file in {path_alternatives} contained any of {substr_alternatives}"
+        ),
+        extra=f"matched: {matched_files[:3]}" if matched_files else "",
+    )
+
+
 def file_modified_glob(work_dir: Path, pattern: str, snapshots=None) -> dict:
     """Any file matching the glob was modified or created this turn."""
     alternatives = _split_alternatives(pattern)
@@ -651,6 +701,7 @@ DISPATCH = {
     "file_modified": file_modified,
     "file_modified_glob": file_modified_glob,
     "file_modified_or_created": file_modified_or_created,
+    "file_contains_any": file_contains_any,
     "hypothesis_count_at_least": hypothesis_count_at_least,
     "hypothesis_evidence_count_increased_for": hypothesis_evidence_count_increased_for,
     "hypothesis_evidence_count_unchanged_for": hypothesis_evidence_count_unchanged_for,

@@ -319,19 +319,30 @@ def run_turn(
     cost_tracker: CostTracker,
     model: str = DEFAULT_TURN_MODEL,
     timeout_s: int | None = None,
+    prompt_mode: str = "wrapped",
 ) -> dict:
     """Execute one scenario turn and return a result dict with before/after snapshots.
 
     Per-turn `model` and `timeout_s` overrides come from expected.yaml entries
     (e.g. `model: opus`, `timeout_s: 900`). When omitted, the harness-level
     defaults apply (DEFAULT_TURN_MODEL and TURN_TIMEOUT_S).
+
+    `prompt_mode` controls how the artifact is sent to the agent:
+      - "wrapped" (default): wrap in TURN_PROMPT_TEMPLATE — assumes a populated brain
+        exists in cwd (CLAUDE.md + INDEX.md readable).
+      - "passthrough": send the artifact body verbatim as the prompt. Use for install
+        scenarios where the brain doesn't exist yet.
     """
     files_before = snapshot_files(work_dir)
-    prompt = TURN_PROMPT_TEMPLATE.format(
-        turn_index=turn_index,
-        input_name=input_file.name,
-        artifact=input_file.read_text(encoding="utf-8"),
-    )
+    artifact = input_file.read_text(encoding="utf-8")
+    if prompt_mode == "passthrough":
+        prompt = artifact
+    else:
+        prompt = TURN_PROMPT_TEMPLATE.format(
+            turn_index=turn_index,
+            input_name=input_file.name,
+            artifact=artifact,
+        )
     effective_timeout = timeout_s if timeout_s is not None else TURN_TIMEOUT_S
     t0 = time.time()
     invocation = invoke_claude(prompt, cwd=work_dir, timeout_s=effective_timeout, model=model)
@@ -459,7 +470,21 @@ def run_once(
     }
 
     try:
-        bootstrap_brain(work_dir)
+        if expected.get("bootstrap", "scaffold") != "skip":
+            bootstrap_brain(work_dir)
+        else:
+            # Install-style scenario: don't copy the scaffold (the agent's job).
+            # Do pre-stage the SKILL itself at .claude/skills/pm-brain/ so /pm-brain
+            # is discoverable and the agent can read scaffold/ from inside the skill —
+            # this mirrors how a real install resolves the skill on disk.
+            skill_dest = work_dir / ".claude" / "skills" / "pm-brain"
+            skill_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copytree(SKILL_PATH, skill_dest)
+            print(
+                f"  bootstrap: skipped scaffold copy; staged skill at .claude/skills/pm-brain/",
+                file=sys.stderr,
+            )
+        scenario_prompt_mode = expected.get("prompt_mode", "wrapped")
         turn_configs = {t["input"]: t for t in expected.get("turns", [])}
 
         for i, input_file in enumerate(inputs, start=1):
@@ -468,10 +493,12 @@ def run_once(
             tcfg = turn_configs.get(input_file.name, {})
             turn_model = tcfg.get("model", DEFAULT_TURN_MODEL)
             turn_timeout = tcfg.get("timeout_s")  # None falls back to TURN_TIMEOUT_S
+            turn_prompt_mode = tcfg.get("prompt_mode", scenario_prompt_mode)
             print(f"  turn {i}/{len(inputs)}: {input_file.name}", file=sys.stderr)
             turn_result = run_turn(
                 work_dir, input_file, i, cost_tracker,
                 model=turn_model, timeout_s=turn_timeout,
+                prompt_mode=turn_prompt_mode,
             )
             snapshots = {
                 "before": turn_result["files_before"],

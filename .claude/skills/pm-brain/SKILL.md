@@ -42,11 +42,19 @@ Load `prompts/interview.md`. Ask the 5 batches (greenfield) or only the gaps not
 
 ### 4. Copy the scaffold
 
-Copy **every file and folder** from `scaffold/` into the current working directory. Preserve structure. Use `Bash` (`cp -R`) or `PowerShell` (`Copy-Item -Recurse`) — whichever is available.
+Copy **every file and folder** from `scaffold/` into the current working directory — including the hidden `.claude/` directory (hooks + per-brain settings) and dotfiles (`.gitignore`, `.gitkeep`). Preserve structure.
+
+Use the form of copy that picks up dotfiles by default:
+
+- **Bash:** `cp -R scaffold/. <dest>/`  (the trailing `/.` is what makes dotfiles come along)
+- **PowerShell:** `Copy-Item -Recurse -Force scaffold\* <dest>\` followed by `Copy-Item -Recurse -Force scaffold\.* <dest>\` (the second pass picks up `.claude/` and `.gitignore`; `Copy-Item -Recurse scaffold\*` alone *will* silently drop them)
+
+After copying, verify the install by listing the destination — `.claude/`, `.gitignore`, and every top-level area folder (`hypotheses/`, `decisions/`, `source/`, `ingestion/`, `knowledge/`, `stakeholders/`, `rules/`, `maintenance/`, `docs/`) must all be present. If `.claude/` is missing the hook won't fire on agent writes and schema violations will go uncaught — re-do the copy.
 
 **Critical rules:**
 - Copy in place. The current working directory **is** the project root. Do not create a nested subfolder.
 - Preserve `.gitkeep` files in empty folders.
+- Preserve `.claude/hooks/validate_brain_file.py` and `.claude/settings.json` exactly as shipped — they're what makes schema enforcement happen in-loop as the agent edits brain files.
 - Do not modify scaffold files at the source. If you need to change a template permanently, edit `scaffold/` and re-version the skill.
 
 ### 5. Populate placeholders from interview answers
@@ -114,16 +122,22 @@ Then stop and wait for the operator's first real task.
 pm-brain-skill/
 ├── SKILL.md              # This file. Orchestration.
 ├── scaffold/             # Deterministic static structure. Copy as-is.
+│   ├── .claude/          # Per-brain Claude Code config (hooks + settings)
+│   │   ├── hooks/
+│   │   │   └── validate_brain_file.py   # PostToolUse schema validator
+│   │   ├── commands/     # Slash commands shipped with the brain
+│   │   └── settings.json # Wires the hook to Write|Edit
+│   ├── .gitignore
 │   ├── CLAUDE.md
 │   ├── INDEX.md
 │   ├── README.md
-│   ├── .gitignore
 │   ├── knowledge/        # strategy, product, users, market, org
 │   ├── stakeholders/
 │   ├── hypotheses/
 │   ├── decisions/
 │   ├── rules/
-│   ├── ingestion/
+│   ├── source/           # Verbatim audit anchors
+│   ├── ingestion/        # Synthesized records
 │   ├── maintenance/
 │   └── docs/
 └── prompts/              # Adaptive reasoning. Loaded per phase.

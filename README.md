@@ -1,27 +1,34 @@
 # PM Brain
 
-A markdown-native second brain for product managers, built as a Claude Code skill.
+**A second brain for product managers.** Your PM context — interviews, decisions, hypotheses, stakeholder claims, strategy — lives as plain markdown files in a folder on your laptop. Claude reads them before answering, writes to them after, and runs a weekly sweep that flags what's drifting.
 
-You manage one product. Your context lives in five places: Notion, Linear, Slack, your dashboards, and your head. You ship a feature. Six weeks later, nobody remembers why you killed the other option.
+You manage one product. Your context is scattered across Notion, Linear, Slack, your dashboards, and your head. You ship a feature. Six weeks later, nobody remembers why you killed the other option. PM Brain fixes that.
 
-PM Brain fixes that. It runs as markdown files in a git repo with a single `CLAUDE.md` operating manual. No vector database. No embeddings. No auto-tagging. The agent loads relevant context before a task, updates the right files after, and runs a weekly maintenance sweep that compresses what's worth keeping and flags what's drifting.
+> **See it in action:** [A week with PM Brain — Lena's first five days](./docs/walkthrough.md) is a short story of one PM using it on a real team. New here? Start there.
 
 ## What it is
 
-- Markdown files in a git repo
-- One `CLAUDE.md` operating manual the agent reads at the start of every session
-- Five knowledge areas (strategy, product, users, market, org)
-- Three lifecycle areas (hypotheses, decisions, stakeholders)
-- Four ingestion modes (interviews, meetings, market, ad-hoc)
-- One maintenance loop that runs weekly
-- One provenance vocabulary every load-bearing claim wears: `[ingestion/...]`, `[source/...]`, `(stakeholder-verbal, ...)`, `(intuition, PM, ...)`, `(industry-knowledge)`, `(chat, no artifact)` — the system enforces the vocabulary, not the workflow, so messy real-world inputs stay auditable
+A folder of markdown files in a git repo, plus one short operating manual (`CLAUDE.md`) that tells Claude how to use them. The agent loads the right files before a task, updates the right files after, and surfaces contradictions you'd otherwise miss.
+
+The folder is organized around how PM work actually flows:
+
+- **`knowledge/`** — your stable picture of strategy, product, users, market, and org
+- **`hypotheses/`** — things you're tracking the evidence for
+- **`decisions/`** — calls you've made, with the evidence trail and what would reopen them
+- **`stakeholders/`** — one file per person, with their asks and concerns
+- **`ingestion/`** — synthesis of every interview, meeting, doc, or message the brain has read
+- **`source/`** — the untouched originals, so the audit trail stays intact
+
+Every claim wears a small tag — a **provenance** marker — that says where it came from: a documented interview, a verbal stakeholder comment, your own hunch, or general industry knowledge. The brain treats them with appropriate weight. (Full list in the [glossary](./docs/glossary.md).)
+
+No vector database. No embeddings. No auto-tagging. The whole brain is human-readable; you can open it in any editor.
 
 ## What it isn't
 
-- Not a notes app
-- Not a chatbot with memory
-- Not a vector database
-- Not autonomous product management
+- Not a notes app — it's an opinionated structure with maintenance built in
+- Not a chatbot with memory — the memory lives in your repo, not in Claude
+- Not a vector database — every file is plain markdown, grep-able by you
+- Not autonomous product management — judgment stays with you; the brain makes the boring cross-referencing easier
 
 ## Install
 
@@ -36,18 +43,18 @@ cd ~/projects/my-product-brain
 /pm-brain
 ```
 
-The skill detects mode (greenfield, migration, or active repo), runs a focused 5-batch interview, copies a deterministic scaffold into the directory, and commits locally. Never pushes.
+The skill detects what's already in the directory. An empty folder gets a fresh start (**greenfield**). A folder with existing PM artifacts — Notion exports, a Jira CSV, meeting notes — gets read and absorbed (**migration**). Either way, a short 5-batch interview captures company, role, and current priorities. The scaffold drops in, the brain commits locally. Never pushes.
 
-## The six verbs
+## The six commands
 
 | Command | What it does |
 |---|---|
-| `/ingest <source>` | Route an artifact into the brain. Auto-detects shape (interview, meeting, market, ad-hoc). Updates `ingestion/` plus whichever durable areas apply. |
-| `/prep <stakeholder>` | Read-only at call time. Surfaces open asks, last unresolved concern, suggested questions. |
-| `/review` | Weekly sweep. Six checks. Edits directly where confidence is high, drafts where not. |
-| `/ideate <problem>` | Synthesis, not brainstorm. Loads strategy + insights + hypotheses. Surfaces 3-7 directions tagged with evidence. |
-| `/risk <feature>` | 5-area risk scan. Drafts hypothesis stubs for any area with no coverage. |
-| `/plan <objective>` | Drafts a six-block plan: what we know, assumption vs evidence, who to interview, hypotheses to open, experiments, decision points. |
+| `/ingest <thing>` | Feed an artifact into the brain — a file, a paste, a quick note in chat. The skill figures out the shape (interview, meeting, market signal, ad-hoc) and routes it. |
+| `/prep <stakeholder>` | One-page brief before a meeting: their open asks, last unresolved concern, suggested questions. |
+| `/review` | Weekly sweep. Six checks across the brain. Fixes small things directly, drafts the bigger ones for your call. |
+| `/ideate <problem>` | Synthesis, not brainstorm. Loads strategy, insights, and hypotheses. Surfaces 3–7 directions, each tagged with the evidence behind it. |
+| `/risk <feature>` | Five-area risk scan. Drafts hypothesis stubs for any area with no coverage. |
+| `/plan <objective>` | Six-block draft plan: what we know, assumption vs evidence, who to interview, hypotheses to open, experiments to run, decision points. |
 
 ## Repo layout
 
@@ -70,11 +77,13 @@ Full reference — scenario format, ground-truth schema, harness internals, assu
 
 ## Docs
 
-- [`docs/architecture.md`](./docs/architecture.md) — the layered split (deterministic scaffold + adaptive prompts) and why
-- [`docs/how-it-works.md`](./docs/how-it-works.md) — ingestion → knowledge / hypotheses / decisions lifecycle, with a worked example
+- [`docs/walkthrough.md`](./docs/walkthrough.md) — *Start here.* A week with PM Brain, told as a story
+- [`docs/glossary.md`](./docs/glossary.md) — every term used in PM Brain, defined in plain English
+- [`docs/how-it-works.md`](./docs/how-it-works.md) — the technical version of the walkthrough, with files and folders
+- [`docs/architecture.md`](./docs/architecture.md) — the design choices (deterministic scaffold + adaptive prompts) and why
 - [`docs/testing.md`](./docs/testing.md) — how the eval suite works, scenario format, ground-truth schema
-- [`docs/testing-decisions.md`](./docs/testing-decisions.md) — running log of what eval runs taught us and the design decisions that came out of them (provenance vocabulary refactor, the `Open questions / caveats:` field, why some assertions got relaxed, why short scenarios). Read this when an assertion or scaffold rule looks arbitrary and you want to know *why it's there*.
-- [`docs/prior-art.md`](./docs/prior-art.md) — Zettelkasten, RAG memory, agent OS patterns, what's borrowed and what's new
+- [`docs/testing-decisions.md`](./docs/testing-decisions.md) — running log of what eval runs taught us and the design calls that came out of them. Read when an assertion or scaffold rule looks arbitrary and you want to know *why it's there*.
+- [`docs/prior-art.md`](./docs/prior-art.md) — Zettelkasten, RAG memory, agent OS patterns: what's borrowed and what's new
 
 ## Composing with PM Skills
 
