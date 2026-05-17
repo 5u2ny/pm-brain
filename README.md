@@ -14,6 +14,7 @@ PM Brain fixes that. It runs as markdown files in a git repo with a single `CLAU
 - Three lifecycle areas (hypotheses, decisions, stakeholders)
 - Four ingestion modes (interviews, meetings, market, ad-hoc)
 - One maintenance loop that runs weekly
+- One provenance vocabulary every load-bearing claim wears: `[ingestion/...]`, `[source/...]`, `(stakeholder-verbal, ...)`, `(intuition, PM, ...)`, `(industry-knowledge)`, `(chat, no artifact)` — the system enforces the vocabulary, not the workflow, so messy real-world inputs stay auditable
 
 ## What it isn't
 
@@ -57,21 +58,22 @@ tests/                      # Eval suite — synthetic scenarios + harness
 docs/                       # Architecture, how it works, testing, prior art
 ```
 
-## What's in `tests/`
+## Tests
 
-Synthetic scenarios + a harness that runs them through the skill via `claude -p` and asserts the brain's state after each turn. Tests verify three layers:
+Synthetic scenarios + a harness that runs them through the skill via `claude -p` and asserts the brain's state after each turn. Three eval layers — **structural** (deterministic Python asserts), **content** (LLM-as-judge with tight rubrics), **convergence** (per-assertion pass rate across N runs).
 
-- **Structural** — file presence, schema validity, INDEX integrity (deterministic)
-- **Content** — did the right hypothesis get promoted? was the contradiction surfaced? (LLM-as-judge with rubrics)
-- **Convergence** — across N runs of the same scenario, what's the pass rate per assertion? (statistical)
+```bash
+python tests/harness/run_scenario.py tests/scenarios/01-b2b-churn
+```
 
-See [`tests/README.md`](./tests/README.md) and [`docs/testing.md`](./docs/testing.md).
+Full reference — scenario format, ground-truth schema, harness internals, assumptions, cost model, current coverage, gaps, and how to add a scenario — lives in [`tests/TESTING.md`](./tests/TESTING.md). The 90-second operator quickstart is in [`tests/README.md`](./tests/README.md). Design rationale (why scenarios over per-turn unit tests, why LLM-as-judge is reserved) is in [`docs/testing.md`](./docs/testing.md).
 
 ## Docs
 
 - [`docs/architecture.md`](./docs/architecture.md) — the layered split (deterministic scaffold + adaptive prompts) and why
 - [`docs/how-it-works.md`](./docs/how-it-works.md) — ingestion → knowledge / hypotheses / decisions lifecycle, with a worked example
 - [`docs/testing.md`](./docs/testing.md) — how the eval suite works, scenario format, ground-truth schema
+- [`docs/testing-decisions.md`](./docs/testing-decisions.md) — running log of what eval runs taught us and the design decisions that came out of them (provenance vocabulary refactor, the `Open questions / caveats:` field, why some assertions got relaxed, why short scenarios). Read this when an assertion or scaffold rule looks arbitrary and you want to know *why it's there*.
 - [`docs/prior-art.md`](./docs/prior-art.md) — Zettelkasten, RAG memory, agent OS patterns, what's borrowed and what's new
 
 ## Composing with PM Skills

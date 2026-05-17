@@ -36,7 +36,7 @@ Do not output anything else.
 
 ## Rubrics in this directory
 
-The MVP scenario `01-b2b-churn` uses these 11 rubrics:
+Scenario `01-b2b-churn` uses these 11 rubrics:
 
 | Rubric | What it checks | Turn(s) |
 |---|---|---|
@@ -51,6 +51,16 @@ The MVP scenario `01-b2b-churn` uses these 11 rubrics:
 | `insight_promoted_with_dissent.md` | Promoted insight is specific (compliance-ops) + preserves dissent | 9 |
 | `decision_quality.md` | Decision file: evidence by name, dissent named, specific reversal | 10 |
 | `audit_trail.md` | Walk decision → hypothesis → ingestion → source/ via working links | final |
+
+Scenario `02-inherited-folder` adds these rubrics (post-bulk-ingest migration behaviors):
+
+| Rubric | What it checks | Turn(s) |
+|---|---|---|
+| `bulk_ingest_caution.md` | High-volume ingest, low-volume promotion; provenance/age tagging | 1 |
+| `tensions_enumerated.md` | Conflict list with provenance, not smoothed prose | 2 |
+| `contradiction_resolved_with_audit.md` | Strategy/draft resolved with both artifacts retained + cross-linked | 6 |
+| `staleness_flagged.md` | Calibrated staleness — distinguishes age from staleness | 7 |
+| `decision_provenance.md` | Decision rows tagged inherited vs Maya-collected vs functional | 9 |
 
 ## Why so many rubrics
 

@@ -1,6 +1,9 @@
 # Test run outputs (gitignored by default; pin snapshots manually if needed)
 tests/results/
 
+# Kept work dirs from --keep-workdir runs (debug artifacts; never committed)
+tests/workdir/
+
 # Python
 __pycache__/
 *.pyc
@@ -21,3 +24,7 @@ Thumbs.db
 # Env
 .env
 .env.local
+
+# Claude Code runtime artifacts (per-machine, never shared)
+.claude/scheduled_tasks.lock
+.claude/projects/

@@ -20,12 +20,39 @@ Start every task at [`INDEX.md`](./INDEX.md). It routes to every area. Strategy 
 ## Operating loop
 
 1. **Receive task / signal.**
-2. **Retrieve before asking.** Search the repo. Inspect linked files. Inspect recent ingestion. Infer from prior decisions. Only ask the PM when the answer materially affects direction and isn't recoverable from the repo.
-3. **Identify area(s).** Map to: strategy, product, users, market, org, stakeholders, hypotheses, decisions.
-4. **Load** (within the context budget below).
-5. **Act.** Cite specific files when referencing knowledge.
-6. **Update.** Write back to affected files. Promote/demote hypotheses if evidence shifted. Log decisions. Update stakeholder last-touched. Append to maintenance log if structural.
-7. **Surface and close.** Tell the PM in 2–4 bullets: what was resolved, what remains open, what requires their judgment, what should be revisited later. Do not end a task with dangling ambiguity uncalled out.
+2. **Classify the task type** (see § Task types below) — this governs the output shape. Getting this wrong is the most common quality failure: producing a routing-summary when the PM asked for substantive synthesis, or vice versa.
+3. **Retrieve before asking.** Search the repo. Inspect linked files. Inspect recent ingestion. Infer from prior decisions. Only ask the PM when the answer materially affects direction and isn't recoverable from the repo.
+4. **Identify area(s).** Map to: strategy, product, users, market, org, stakeholders, hypotheses, decisions.
+5. **Load** (within the context budget below).
+6. **Act.** Cite specific files when referencing knowledge.
+7. **Update.** Write back to affected files. Promote/demote hypotheses if evidence shifted. Log decisions. Update stakeholder last-touched. Append to maintenance log if structural.
+8. **Surface and close** — **in the shape the task type demands** (see § Task types). Do not end a task with dangling ambiguity uncalled out.
+
+## Task types — output shape matters
+
+The "Surface and close" step is task-type-dependent. Misreading the type is the most common quality failure. Three shapes:
+
+### Type A — Ingestion / routing
+
+PM hands you a raw artifact (interview, meeting, analytics snapshot, market signal). You preserve source, synthesize ingestion, route observations to hypothesis evidence rows / stakeholder updates / metrics. The substantive work is the *file writes*.
+
+**Output shape:** a short routing summary — 2–4 bullets listing what was created/updated, what remains open, what needs PM judgment. The reader's job is to verify your routing; the value lives in the files.
+
+### Type B — Synthesis / analysis / "walk through the case"
+
+PM asks you to **think out loud over what's already ingested**. No new artifact. Phrases that signal this: "walk through", "synthesize", "what's the strongest evidence for / against", "lay out the case", "what's still ambiguous", "what do you make of this".
+
+**Output shape:** the substantive analytical content itself — the actual answer to the questions. Reference each prior ingested artifact **by slug** (`source/interviews/<date>-<who>.md`), name contradictions explicitly (do not flatten dissent into "diverse feedback"), name what's still missing concretely (which interview, which segmentation pull, which deadline). Do NOT collapse synthesis-type asks into the Type A "what I did / what's open" template — that is the wrong shape and discards the actual value.
+
+If the PM also said "do not draft a decision yet", honor that: produce the case, not a verdict.
+
+### Type C — Decision / commitment
+
+PM asks you to draft a decision record. Use the `decisions/_SCHEMA.md` template. Every Evidence row carries a provenance tag. Every Status / Date / Reversal-condition field is present. Output to the PM: the decision file path + a 1-line summary of what was committed + what remains open for PM sign-off.
+
+### When the type is ambiguous
+
+If the prompt blends types (e.g. "synthesize and then draft a decision"), default to executing them in order: synthesize first (Type B output, full substance), pause, then draft (Type C). Do NOT skip the synthesis content and jump straight to the decision — the substantive analysis is itself the audit anchor for the decision.
 
 ## Context budget
 
@@ -67,6 +94,14 @@ Do not silently overwrite higher-confidence sources with lower-confidence signal
 
 **Recency bias correction.** Recent signals are not automatically stronger signals. Prefer repeated patterns over fresh anecdotes. A single new interview does not outweigh a confirmed hypothesis or a documented decision — it adds evidence, not a verdict.
 
+**Correlational vs. causal — don't promote on weak data.** An analytics snapshot, exit-survey result, or aggregate metric is *correlational by default* unless the methodology explicitly establishes causation. Before adding such a signal as a confidence-raising evidence row on an existing hypothesis, check:
+
+- **Sample size.** A churn snapshot with N=12 cohorts and 5 exit-survey responses is a *watch item*, not a second source of confirmation. Tag it with the actual N when you record it.
+- **Confounders.** Did anything else change in the same window that could explain the metric move?
+- **Same-domain independence.** A customer interview saying "notifications are overwhelming" and an exit-survey citing "notification overload" are NOT two independent sources — they're the same population reporting the same theme through different channels. Don't double-count them as if they were independent confirmations.
+
+When in doubt, land the signal as a watch item in `knowledge/product/metrics.md` or `knowledge/market/` with its caveats (N, correlation-only framing, what would need to be true for it to be causal), and add it to the hypothesis ONLY in the `Open questions / caveats:` section or as an Evidence row tagged with the actual sample-size caveat in-line. **Do not bump the hypothesis confidence level on the strength of one correlational signal.** Confidence is for evidence that survives the causal check, not for accumulated correlation.
+
 ## Canonical ownership
 
 Every important concept has exactly one canonical home. Other files reference but do not silently fork canonical state.
@@ -95,7 +130,19 @@ Never store interpretations as facts. Always label clearly:
 
 When ingesting, tag content with one of these. Stakeholder motivations, persona claims, and synthesized insights are interpretations by default.
 
-**Provenance for high-leverage claims.** When a claim drives downstream work — synthesized user insights, strategy tensions, stakeholder concerns, hypothesis evidence — retain provenance inline: source artifact (link), date, evidence type. Do not add provenance to low-stakes notes; this is a targeted rule, not blanket metadata. Without provenance on the claims that matter, the system goes epistemically mushy over time.
+**Provenance for high-leverage claims.** When a claim drives downstream work — synthesized user insights, strategy tensions, stakeholder concerns, hypothesis evidence, decision evidence rows — tag it with one of the canonical provenance markers from the enum in [`hypotheses/_SCHEMA.md`](./hypotheses/_SCHEMA.md):
+
+- `[ingestion/...]` / `[source/...]` — path-typed, must be working markdown links
+- `(stakeholder-verbal, <name>, <YYYY-MM-DD>)` — heard from a person, no recording
+- `(intuition, PM, <YYYY-MM-DD>)` — PM's own read, no external evidence yet
+- `(industry-knowledge)` — accepted background, not specific to this product
+- `(chat, no artifact)` — synthesized in this conversation, nothing written down
+
+The system enforces the **vocabulary**, not the workflow. Claims that didn't go through `ingestion/` are legitimate as long as they wear their actual provenance. Don't fabricate an ingestion record to satisfy a schema. Don't add provenance to low-stakes notes either — this is a targeted rule for claims that drive downstream work, not blanket metadata. Without provenance on the claims that matter, the system goes epistemically mushy over time.
+
+**Evidence rows are claims, not notes.** Inside hypothesis files: a bullet under `Evidence for:` / `Evidence against:` must be a tagged claim. Caveats, gaps, inferences, and "things we don't yet know" go under `Open questions / caveats:` (see [`hypotheses/_SCHEMA.md`](./hypotheses/_SCHEMA.md)) — not under Evidence. The audit check treats every Evidence-row without a tag as an orphan, so don't smuggle commentary in there.
+
+**Relative paths.** See § Linking rules below for the depth-keyed table — always count from the file's parent up to the repo root before saving a cross-link. Broken cross-links rot the brain silently.
 
 ## Never fabricate
 
@@ -103,6 +150,17 @@ When ingesting, tag content with one of these. Stakeholder motivations, persona 
 - Never infer metric values that weren't explicitly provided.
 - Never create stakeholder motivations without marking them as inferred.
 - Label assumptions clearly. If you don't know, say so.
+
+## Source preservation — hard rule
+
+**Before** synthesizing or routing any ingested artifact, copy it verbatim to `source/<kind>/YYYY-MM-DD-<slug>.md`. This is non-negotiable.
+
+- `<kind>` matches the ingestion kind: `interviews`, `meetings`, `market`, `adhoc`.
+- The `source/` file is the **audit anchor**. It is never edited after creation. The matching `ingestion/<kind>/<same-name>.md` is where synthesis lives and gets revised.
+- Every synthesized observation, claim, or hypothesis-evidence entry that traces back to that artifact must link to its `source/` file (relative path). Without that link, the claim has no provenance and will fail review.
+- If you cannot preserve the source (e.g., it's a live URL with no offline copy), record the URL + retrieved-at timestamp + a copy of what you saw at the top of the `source/` file. Never substitute "trust me, this came from somewhere" for a real artifact.
+
+Skipping `source/` to "save a step" is the single fastest way to make the brain epistemically unfalsifiable. Don't.
 
 ## Memory promotion — working vs long-term
 
@@ -115,6 +173,16 @@ Raw ingestion is **not durable knowledge** by default. Items in `ingestion/` are
 - **Likely useful beyond one session**
 
 One-off observations stay in ingestion until they accumulate. Maintenance promotes items meeting the bar.
+
+**Where promotion lands — the canonical homes (not optional).** When a signal crosses the promotion bar, write it to its canonical home, not just into adjacent files. The most-missed promotion target is the user-insights file. Bind by signal type:
+
+- **User-level pattern** (theme observed across 2+ independent users/interviews) → `knowledge/users/insights.md` under `## Active themes`, with one Evidence row per supporting source (each tagged). If a hypothesis file has been updated with the same pattern, the insights.md row is still required — the hypothesis is feature-scoped, insights.md is the canonical user-knowledge home. Both must exist.
+- **Persona claim** (durable characteristic of a user segment) → `knowledge/users/personas.md` (or the per-persona file if you keep one per persona).
+- **Product-level pattern** (analytics behavior, retention shape, feature usage) → `knowledge/product/metrics.md` or the relevant `knowledge/product/features/<slug>.md`.
+- **Market/competitive pattern** → `knowledge/market/landscape.md` or `knowledge/market/competitors/<slug>.md`.
+- **Strategic tension** — see § Strategy tension threshold (separate, higher bar).
+
+Updating a hypothesis file is necessary but not sufficient for a user-pattern promotion. If you find yourself thinking "I promoted the hypothesis, I'm done" — you're not done; the insights.md row is the other half. Counter-signals get preserved under `## Contradictions` in the same file, not flattened.
 
 ## Strategy tension threshold
 
@@ -158,13 +226,37 @@ The "Act autonomously" list above is suspended. Default behavior inverts:
 
 End every task with: "Apply these changes? (y / edit / no)" — and do not save until the answer is `y` or an explicit edit instruction.
 
+## INDEX maintenance — hard rule
+
+When you create a new file under `hypotheses/`, `decisions/`, `stakeholders/`, or any `knowledge/<area>/` subfolder that ships an `INDEX.md`, **update that INDEX.md in the same turn**. Each area's INDEX is the at-a-glance roster — if a new hypothesis, decision, stakeholder, or persona doesn't appear there, the next session's retrieval will miss it. Concretely:
+
+- `hypotheses/INDEX.md` — add the new hypothesis under the appropriate status section (Active / Partially-validated / Promoted / Demoted / Archived).
+- `decisions/INDEX.md` — add the new decision under `## Pending` (if `status: pending`) or `## Recently decided`. Update when status changes.
+- `stakeholders/INDEX.md` — add a roster row with slug / name / role / influence / friction / last-touched date.
+- `knowledge/users/personas/INDEX.md` (or equivalent area-level INDEX) — link the new persona file with a one-line description.
+
+The same applies when status changes (a hypothesis promotes, a decision lands, a stakeholder's last-touched date moves) — reflect the change in the INDEX row, not just the file body. A new file with no INDEX entry is half-saved.
+
 ## Linking rules
 
 Cross-linking is how this system stays a brain instead of a pile. Every feature file should link to its hypotheses, decisions, relevant metrics, relevant ingestion artifacts, and affected stakeholders. Use relative markdown links everywhere.
 
+**Relative paths — compute carefully.** Links are relative to the file containing them. The number of `..`'s depends on how deep that file lives:
+
+| File location | Depth | To reach a top-level area (`hypotheses/`, `source/`, `ingestion/`, `decisions/`, `stakeholders/`, `knowledge/`) |
+|---|---|---|
+| `hypotheses/<slug>.md`, `decisions/<file>.md`, `stakeholders/<file>.md` | 1 | `../<area>/...` (one `..`) |
+| `source/<kind>/<file>.md`, `ingestion/<kind>/<file>.md` | 2 | `../../<area>/...` (two `..`) |
+| `knowledge/<area>/<file>.md` (e.g. `knowledge/product/roadmap.md`) | 2 | `../../<area>/...` (two `..`) |
+| `knowledge/<area>/<sub>/<file>.md` (e.g. `knowledge/market/competitors/vanta.md`) | 3 | `../../../<area>/...` (three `..`) |
+
+Before saving any file, mentally count the directory levels from the file's parent up to the repo root, then down to the target. From `knowledge/market/competitors/vanta.md` to `hypotheses/foo.md` is `../../../hypotheses/foo.md` (three `..`), not `../../hypotheses/foo.md`. The `all_internal_links_valid` audit catches these.
+
 ## Schemas
 
 Canonical schemas live in each area's `_SCHEMA.md`. Cross-index at [`docs/schemas.md`](./docs/schemas.md).
+
+**Before writing or editing** any file under `hypotheses/`, `decisions/`, `stakeholders/`, or `knowledge/users/insights.md`, load that area's `_SCHEMA.md` (or its top-of-file preamble) if not already in context. The schema is the authority on required fields, provenance, and link form — skipping this step is the most common cause of orphan evidence rows and broken cross-links.
 
 ## Operating preferences
 

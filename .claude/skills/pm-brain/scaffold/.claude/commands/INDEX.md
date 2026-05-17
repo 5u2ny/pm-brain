@@ -7,6 +7,9 @@ Operator-facing verbs. Each command is a thin spec: input, files to load, files 
 | [`/ingest`](./ingest.md) | Any new artifact lands — interview, meeting notes, market signal, ad-hoc note |
 | [`/prep`](./prep.md) | Before a 1:1, exec review, roadmap discussion, or any stakeholder conversation |
 | [`/review`](./review.md) | Weekly maintenance sweep (default: Friday) |
+| [`/hypothesize`](./hypothesize.md) | Generate or refresh hypotheses for a feature (pre-ship across the 5 risk areas, or post-ship from data) |
+| [`/decide`](./decide.md) | Log a decision: draft the file from the evidence trail, surface for PM sign-off |
+| [`/strategy-check`](./strategy-check.md) | Drift check between recent decisions / hypotheses / ingestion and `knowledge/strategy.md` |
 | [`/ideate`](./ideate.md) | A problem needs solution directions grounded in existing evidence and hypotheses |
 | [`/risk`](./risk.md) | A feature or plan needs the 5-area risk scan; maps to hypothesis hygiene |
 | [`/plan`](./plan.md) | A new objective lands; turn it into discovery questions, interviews, experiments, hypotheses, decision points |

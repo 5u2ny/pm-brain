@@ -15,7 +15,8 @@ Start here. Every task begins by routing through this file.
 | Hypotheses | [hypotheses/](./hypotheses/) | Pre-ship feature work, experiment design, post-launch evaluation |
 | Decisions | [decisions/](./decisions/) | Anything that commits future effort or reverses a prior choice |
 | Rules | [rules/](./rules/) | How this PM runs discovery, prioritization, shipping, writing |
-| Ingestion | [ingestion/](./ingestion/) | Customer interviews, meeting notes, market intel, ad-hoc dumps |
+| Ingestion | [ingestion/](./ingestion/) | Customer interviews, meeting notes, market intel, ad-hoc dumps — synthesized records |
+| Source | [source/](./source/) | Verbatim audit anchors for every ingested artifact — never edited |
 | Maintenance | [maintenance/](./maintenance/) | Weekly/periodic system reviews |
 
 ## Workflows
@@ -33,5 +34,8 @@ See [docs/workflows.md](./docs/workflows.md) for the full slash command list and
 - `/decide <slug>` — log a decision (interactive prompt)
 - `/review` — run full maintenance sweep
 - `/strategy-check` — drift check between recent decisions/ingestions and `knowledge/strategy.md`
+- `/ideate <problem>` — generate evidence-grounded solution directions
+- `/risk <feature-slug>` — 5-area risk scan; drafts hypothesis stubs for gaps
+- `/plan <objective>` — turn an objective into discovery questions, hypotheses, experiments, decision points
 
 Conversational equivalents work for all of these. Commands are optional.

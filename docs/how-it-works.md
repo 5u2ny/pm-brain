@@ -68,14 +68,15 @@ Promotion threshold met: 3 independent observations of the same pattern, all fro
 ## H2 — Value risk: real-time alerts may have negative value for ops leads
 
 **Evidence for:** (was 0.4) → 0.7
-- 2026-04-22 Acme Ops Lead: "Daily would break our workflow."
-  [source](../source/interviews/2026-04-22-acme-ops-lead.md)
-- 2026-04-08 Notion Ops: "We don't want more interruptions."
-- 2026-03-15 Stripe Compliance: "Batch is how we operate."
+- 2026-04-22 Acme Ops Lead: "Daily would break our workflow."  [ingestion/interviews/2026-04-22-acme.md](../ingestion/interviews/2026-04-22-acme.md)
+- 2026-04-08 Notion Ops: "We don't want more interruptions."  [ingestion/interviews/2026-04-08-notion.md](../ingestion/interviews/2026-04-08-notion.md)
+- 2026-03-15 Stripe Compliance: "Batch is how we operate."  [ingestion/interviews/2026-03-15-stripe.md](../ingestion/interviews/2026-03-15-stripe.md)
 
 **Decision trigger:** if confidence > 0.8 across 5+ independent observations,
 draft decision to defer real-time alerts.
 ```
+
+Each evidence row carries a provenance tag from the canonical enum. Most here are path-typed (`[ingestion/...]`) — the link walks to the synthesis record, which itself links to the raw `source/` transcript. The vocabulary also allows non-path tags like `(stakeholder-verbal, <name>, <date>)`, `(intuition, PM, <date>)`, `(industry-knowledge)`, and `(chat, no artifact)` for claims that legitimately exist without an artifact behind them. See `hypotheses/_SCHEMA.md` for the full enum.
 
 Confidence raised. Decision trigger documented but not fired yet.
 
@@ -133,9 +134,9 @@ No dangling ambiguity. Every task ends with explicit closure.
 
 Three months later, your CTO asks: "Why did we kill real-time alerts?"
 
-You open `decisions/2026-04-25-defer-realtime-alerts.md`. The decision links to the hypothesis. The hypothesis links to three interviews. Each interview links to its source transcript. The full reasoning chain is two clicks deep.
+You open `decisions/2026-04-25-defer-realtime-alerts.md`. Every evidence row carries a provenance tag — most are path-typed `[ingestion/...]` links to interview synthesis records, which themselves link to the raw `source/` transcripts. A few rows are tagged `(stakeholder-verbal, ...)` or `(intuition, PM, ...)` — they're legitimate inputs, just ones that never had an artifact behind them, and they wear that fact. The full reasoning chain on the path-typed rows is two clicks deep.
 
-That's the audit trail. That's what makes the brain different from a notes app.
+That's the audit trail. The vocabulary is what keeps it honest when real PM work is messy.
 
 ## The six verbs, briefly
 

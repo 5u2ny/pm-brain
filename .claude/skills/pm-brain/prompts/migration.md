@@ -31,6 +31,42 @@ For each artifact:
 
 Synthesized output lands in `ingestion/` first. Promotion into `knowledge/` follows the standard memory promotion bar (recurring, decision-relevant, strategy-relevant, observed across sources, useful beyond one session) — see `CLAUDE.md § Memory promotion`.
 
+## 2a. Per-artifact ingestion records are scoped to ONE artifact — HARD RULE
+
+Each `ingestion/<kind>/<date>-<slug>.md` is the synthesis of **its matching `source/<kind>/<date>-<slug>.md` and nothing else.**
+
+**Do NOT, inside a per-artifact ingestion record:**
+
+- Cross-reference other artifacts ("this conflicts with the CFO email…").
+- Note tension with other artifacts ("contradicts the Q4 strategy doc on compliance…").
+- Compare counts or synthesize across sources ("2 of 2 interviews this cycle say…").
+- Pull in claims that did not originate from the matching source.
+
+**Why this matters:** mixing collapses the audit trail. A reader looking at the ingestion record for artifact X cannot tell which claims came from X versus which were imported from comparing X to artifact Y. The synthesis layer becomes lossy in the same place it was supposed to be sharp.
+
+**Where cross-artifact observations go instead:** the contradiction list in step 4, surfaced in the post-migration tension-surfacing turn. That is the *only* place cross-artifact synthesis lives during migration. NOT inside per-artifact ingestion files.
+
+**DON'T (inside `ingestion/strategy/2025-q4-strategy.md`):**
+
+```markdown
+> Compliance-friendly: NO. The Q4 doc explicitly stakes the anti-compliance position.
+> ⚠️ **Tension flag:** This conflicts with the Globex interview (2026-04-03), where Reina
+> asked for audit trails — a compliance-adjacent ask. Surface in tension review.
+```
+
+**DO (inside `ingestion/strategy/2025-q4-strategy.md`):**
+
+```markdown
+> Compliance-friendly: NO. The Q4 doc explicitly stakes the anti-compliance position.
+> (No cross-artifact commentary here — the strategy ingestion faithfully summarizes the
+> strategy doc only. Any cross-artifact tension lives in the contradiction list — step 4.)
+```
+
+**Pre-save self-check before writing any `ingestion/<kind>/<file>.md`:**
+
+1. Does this file contain ANY claim, reference, or comparison that did not appear in its matching `source/` file? If yes — remove it. Route it to the contradiction list.
+2. If you find yourself wanting to write the words "conflicts with", "contradicts", "tension with", "in contrast to", "differs from" (etc.) inside an ingestion record — STOP. Move that thought to the contradiction list.
+
 ## 3. The cognition pipeline
 
 ```
@@ -42,7 +78,7 @@ source/            →   ingestion/        →   knowledge/      (durable observ
 
 Promotion is parallel. The same ingested artifact can land evidence in multiple durable areas at once — `knowledge/` is not the only destination. A single customer interview often updates `knowledge/users/insights.md`, strengthens evidence in a `hypotheses/<feature>.md`, and logs a touchpoint in `stakeholders/<slug>.md`. Sometimes it drafts a `decisions/` entry too.
 
-Every claim in any durable area should be traceable back through `ingestion/` to a specific artifact in `source/`. Provenance is the spine, regardless of which destination the evidence lands in.
+Every claim in any durable area carries a **provenance tag** from the enum in `hypotheses/_SCHEMA.md`. Most claims will tag back through `ingestion/` to a `source/` artifact — that's the canonical chain. But the system enforces vocabulary, not workflow: a claim heard verbal-only from a stakeholder, or inherited from PM intuition, is legitimate as long as it's tagged honestly. The audit promise is "every claim wears its source," not "every claim was synthesized."
 
 Note: `source/` is a **copy** of what the PM gave us. Their originals still live wherever they put them. Promotion cites the `source/` copy by relative path, not the original location.
 

@@ -57,3 +57,7 @@ In migration mode, **skip batches already covered by source artifacts** and ask 
 | E | Q3 off-limits | `CLAUDE.md § Off-limits` |
 
 Keep provenance: every populated field should be traceable back to a specific Batch question or a source artifact. If a Batch answer has no clear home, flag it in the post-scaffold "immediate next moves" rather than silently dropping it.
+
+## Provenance vocabulary, not provenance workflow
+
+When you write claims into hypotheses, insights, or decisions, tag each row with a provenance marker from the enum in `hypotheses/_SCHEMA.md`. Claims born in this interview (no artifact behind them) are legitimate inputs — tag them `(stakeholder-verbal, <PM>, <date>)` or `(chat, no artifact)` rather than fabricating an ingestion record. The auditability promise is "every claim wears its source," not "every claim went through synthesis."

@@ -15,10 +15,11 @@ turns:
   - turn: 1
     input: turn-01-interview-acme-ops.md
     structural:
-      - file_exists_glob: source/interviews/*acme*.md
-      - file_exists_glob: ingestion/interviews/*acme*.md
-      - file_modified_or_created: stakeholders/acme-ops.md
-      - hypothesis_count_at_least: 1  # H2 (or equivalent) should be proposed
+      - file_exists_glob: source/interviews/*acme*.md OR source/interviews/*chen*.md OR source/interviews/*jamie*.md
+      - file_exists_glob: ingestion/interviews/*acme*.md OR ingestion/interviews/*chen*.md OR ingestion/interviews/*jamie*.md
+      # Agent may name the stakeholder file after the person (jamie-chen.md) or the account (acme-ops.md) — both are valid.
+      - file_modified_glob: stakeholders/*acme*.md OR stakeholders/*chen*.md OR stakeholders/*jamie*.md OR stakeholders/*ops*.md
+      - hypothesis_count_at_least: 1  # H-V1 (value-risk hypothesis) should be proposed
     content:
       - judge: hypothesis_proposed_not_promoted
         rubric: judges/hypothesis_proposed.md
@@ -52,8 +53,9 @@ turns:
   - turn: 4
     input: turn-04-interview-stripe-compliance.md
     structural:
-      - file_exists_glob: source/interviews/*stripe*.md
-      - hypothesis_evidence_count_increased_for: H2  # or whichever the agent named the value-risk hypothesis
+      # Agent may name the source file after the company (stripe), the person, or the role (compliance) — accept any.
+      - file_exists_glob: source/interviews/*stripe*.md OR source/interviews/*compliance*.md OR source/interviews/2026-*compliance*.md
+      - hypothesis_evidence_count_increased_for: H-V1   # value-risk hypothesis from turn 1
     content:
       - judge: insight_still_not_promoted
         rubric: judges/insight_promotion.md
@@ -64,11 +66,11 @@ turns:
     input: turn-05-slack-pricing-thread.md
     structural:
       - file_exists_glob: ingestion/adhoc/*pricing*.md OR ingestion/meetings/*pricing*.md
-      - hypothesis_evidence_count_unchanged_for: H2
+      - hypothesis_evidence_count_unchanged_for: H-V1
     content:
       - judge: low_signal_rejected
         rubric: judges/low_signal.md
-        expected_meaning: "the pricing-channel chatter does NOT get false-promoted to H2 evidence; lands in adhoc/ or pricing notes"
+        expected_meaning: "the pricing-channel chatter does NOT get false-promoted to H-V1 evidence; lands in adhoc/ or pricing notes"
         must_not: "add pricing chatter as evidence for the value-risk hypothesis"
 
   - turn: 6
@@ -80,13 +82,14 @@ turns:
       - judge: contradiction_surfaced
         rubric: judges/contradiction_surfaced.md
         target_glob: hypotheses/*.md
-        expected_meaning: "agent flags that Brex interview contradicts H2's framing; the contradiction is named in the hypothesis file under evidence-against or a contradictions section"
-        must_not: "silently demote H2 without surfacing the conflict, or flatten Brex into agreement"
+        expected_meaning: "agent flags that Brex interview contradicts H-V1's framing; the contradiction is named in the hypothesis file under evidence-against or a contradictions section"
+        must_not: "silently demote H-V1 without surfacing the conflict, or flatten Brex into agreement"
 
   - turn: 7
     input: turn-07-decision-trigger.md
-    structural:
-      - file_modified_glob: hypotheses/*.md
+    # Synthesis-only turn: the agent thinks out loud, may not write to hypotheses/.
+    # The judge below evaluates agent_response text directly (passed via scenario_context).
+    structural: []
     content:
       - judge: full_trail_synthesized
         rubric: judges/decision_trigger.md
@@ -97,7 +100,8 @@ turns:
     input: turn-08-market-vanta-changelog.md
     structural:
       - file_exists_glob: source/market/*vanta*.md
-      - file_modified: knowledge/market/landscape.md OR knowledge/market/trends.md
+      # Agent may route the Vanta signal into market knowledge, into competitors/, or into a hypothesis viability row — accept any.
+      - file_modified_glob: knowledge/market/landscape.md OR knowledge/market/trends.md OR knowledge/market/competitors/*.md OR hypotheses/*.md
     content:
       - judge: risk_area_routing
         rubric: judges/risk_area_routing.md
@@ -106,7 +110,7 @@ turns:
   - turn: 9
     input: turn-09-interview-notion-ops.md
     structural:
-      - hypothesis_evidence_count_increased_for: H2
+      - hypothesis_evidence_count_increased_for: H-V1
       - file_modified: knowledge/users/insights.md
     content:
       - judge: insight_promoted_with_dissent_preserved
@@ -124,7 +128,7 @@ turns:
         rubric: judges/decision_quality.md
         target_glob: decisions/*.md
         expected_meaning: |
-          decision file references H2, lists supporting evidence by name, names the contradiction explicitly,
+          decision file references H-V1 (the value-risk hypothesis), lists supporting evidence by name, names the contradiction explicitly,
           contains a specific 'what would reverse this' field (not vague — must be observable),
           status is 'pending' or 'decided' depending on the trigger prompt
         must_not: "draft a decision with no reversal condition, or with a vague reversal condition like 'if things change'"

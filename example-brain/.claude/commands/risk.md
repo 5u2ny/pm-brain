@@ -24,6 +24,12 @@ A feature slug (`/risk weekly-digest`), a plan name, or a draft PRD pasted into 
 
 Risks with active hypotheses and fresh evidence are not touched.
 
+**Hard constraints when drafting stubs:**
+
+- Every Evidence-row in a new stub must carry a provenance tag from the enum in `hypotheses/_SCHEMA.md`. If the stub is opening a risk area with no concrete artifact yet, tag the row honestly: `(intuition, PM, <YYYY-MM-DD>)` or `(industry-knowledge)`. If you are citing a strategy clause, the row must include a working path-typed link like `[knowledge/strategy.md]` — not a bare paraphrase. Untagged rows fail the `no_orphan_evidence` audit.
+- New stubs are status `candidate` (or `active` with confidence `low`) — never `promoted` or `partially-validated` at creation.
+- Update `hypotheses/INDEX.md` in the SAME turn for every new stub. A new hypothesis file without an INDEX row is half-saved.
+
 ## Surfaces
 
 The five risk areas, each with status and the top item:

@@ -72,7 +72,22 @@ source/            →   ingestion/        →   knowledge/      (synthesized ob
 
 The same ingestion can update multiple durable destinations in parallel. A 45-minute customer interview might touch six files: one source copy, one ingestion record, one insight promoted to `knowledge/users/`, one hypothesis strengthened, one stakeholder touchpoint logged, one decision drafted as `pending`.
 
-The link from any durable claim back to a specific `source/` file is the audit trail. That's what makes the system inspectable instead of just opinionated.
+## Provenance: a vocabulary, not a workflow
+
+Every load-bearing claim in `hypotheses/`, `decisions/`, and `knowledge/users/insights.md` carries a **provenance tag** from a small canonical enum:
+
+| Tag | Trust |
+|---|---|
+| `[ingestion/<path>](...)` | Highest — went through synthesis, links back to `source/`. |
+| `[source/<path>](...)` | High — direct citation to a raw artifact. |
+| `(stakeholder-verbal, <name>, <date>)` | Medium — heard from a person, no recording. |
+| `(intuition, PM, <date>)` | Low for external defense, useful internally. |
+| `(industry-knowledge)` | Low — accepted background, flag for replacement. |
+| `(chat, no artifact)` | Low — synthesized in-session, nothing written down. |
+
+The system enforces the **vocabulary**, not the workflow. Real PM work is messy: PMs have intuitions, hear things off-the-record from execs, and inherit claims with no clear pedigree. Those are legitimate inputs — the brain just makes them wear their actual provenance instead of laundering them through a fake `ingestion/` record. The auditability promise is "every claim wears its source," not "every claim was synthesized."
+
+A path-typed tag walks (in two clicks) from a decision back to a `source/` artifact. A non-path tag tells you honestly that no artifact exists. Both are auditable; only the missing tag is a bug.
 
 ## The hypothesis / decision split
 

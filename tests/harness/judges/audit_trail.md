@@ -2,41 +2,50 @@
 
 ## What we're checking
 
-The entire architectural promise of PM Brain is that every durable claim traces back to a `source/` artifact through working markdown links. This is the auditability claim.
+The architectural promise of PM Brain is that every load-bearing claim **wears its provenance**. Auditability is enforced as a vocabulary, not a workflow: a claim that never went through `ingestion/` is legitimate as long as it's tagged honestly. A claim with no tag at all is a broken audit anchor.
 
-Starting from the decision file produced at turn 10, you should be able to navigate the chain:
+The vocabulary is the enum defined in `hypotheses/_SCHEMA.md`:
 
-```
-decision → hypothesis → ingestion record → source artifact
-```
+| Tag form | Type |
+|---|---|
+| `[ingestion/<path>](...)` | path-typed — link MUST resolve |
+| `[source/<path>](...)` | path-typed — link MUST resolve |
+| `(stakeholder-verbal, <name>, <YYYY-MM-DD>)` | non-path |
+| `(intuition, PM, <YYYY-MM-DD>)` | non-path |
+| `(industry-knowledge)` | non-path |
+| `(chat, no artifact)` | non-path |
 
-Two clicks deep. Every step a working markdown link. If any link breaks, the audit chain is broken, and the system's load-bearing promise is broken.
+Auditability comes in two shapes, both valid:
 
-This is the final-state assertion. Run it after all turns complete.
+1. **The strong chain** — at least one path-typed tag (`[ingestion/...]` or `[source/...]`) on a load-bearing claim in the decision file, walking through the linked hypothesis, and ending at a real `source/` artifact in at most two clicks from the decision. This is the architecturally clean shape and at least one such chain MUST exist. Both terminal shapes are valid: `decision → hypothesis → ingestion → source/` and `decision → hypothesis → source/` (a direct `[source/...]` citation is legitimate per the schema; it does NOT require a parallel `ingestion/` record).
+2. **Vocabulary-only claims** — claims tagged with the non-path enums are legitimate and PASS as long as the tag is from the enum. They do not have to resolve to a file. But the decision cannot rest ENTIRELY on non-path claims — at least one path-typed chain to a `source/` artifact must exist somewhere in the supporting evidence.
+
+This is typically the final-state assertion (run after all turns complete), but can also be invoked at a specific decision turn.
 
 ## You will be given
 
 - The full work_dir (the brain after all 10 turns).
-- The target file: the decision created at turn 10.
+- The target file: the decision created at the relevant decision turn.
 
 ## Pass criteria
 
 ALL of the following must be true:
 
-- The decision file's evidence references include working markdown links to:
-  - At least one hypothesis file under `hypotheses/`.
-  - At least three ingestion records under `ingestion/interviews/` (Acme, Stripe, Notion at minimum).
-  - At least one source artifact under `source/`.
-- Following each link from the decision file resolves to a real file (no 404s on relative paths).
-- Walking from the decision into the linked hypothesis, the hypothesis itself contains working links to ingestion records and source files.
-- At least one full chain works end to end: `decision → hypothesis → ingestion → source/` with every step a valid relative markdown link.
+- The decision file's evidence rows each carry a tag matching one of the enum forms above (path-typed link OR one of the parenthetical forms — exact spelling required).
+- At least one row in the decision file is path-typed (`[ingestion/...]` or `[source/...]`) and the link resolves to a real file.
+- Following the path-typed link(s) from the decision (directly or via the linked hypothesis), at least one chain reaches a real `source/` artifact in at most two clicks. Both shapes are valid:
+  - `decision → hypothesis → ingestion → source/`
+  - `decision → hypothesis → source/` (when the parallel ingestion record exists for that source and itself links to it)
+- Walking from the decision into the linked hypothesis, the hypothesis itself contains at least one path-typed tag whose link resolves.
 
 ## Fail criteria (must_not)
 
-- Any link in the decision file is broken.
-- The hypothesis the decision references doesn't itself link to its evidence sources.
-- An ingestion record exists but no source artifact (broken at the bottom of the chain).
-- The decision references evidence by name but doesn't link it (a claim without an audit anchor).
+- Any path-typed tag in the decision file is broken (404 on relative path).
+- An evidence row has no tag at all (orphan claim with no audit anchor).
+- An evidence row has a tag that is neither path-typed nor exactly matches one of the parenthetical forms (invented category).
+- The decision file contains zero path-typed tags — it rests entirely on non-path provenance (no anchor in any artifact).
+- The hypothesis the decision references has no path-typed tags whose links resolve (chain dies one click into the hypothesis).
+- A hypothesis's only path-typed tags are broken (link target file does not exist on disk).
 
 ## Output format
 

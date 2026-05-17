@@ -2,7 +2,7 @@
 
 Eval suite for the PM Brain skill. Runs synthetic scenarios through `claude -p` and asserts the brain's state after each turn.
 
-See [`docs/testing.md`](../docs/testing.md) for the full philosophy and architecture. This file is the operator-level quickstart.
+This file is the **operator-level quickstart**. For everything else — scenario format, ground-truth schema, harness internals, assumptions, full coverage / gap list, and how to add a scenario — see [`TESTING.md`](./TESTING.md). Design rationale lives in [`../docs/testing.md`](../docs/testing.md).
 
 ## Quickstart
 
@@ -64,10 +64,13 @@ See [`docs/testing.md § Scenario format`](../docs/testing.md#scenario-format) f
 
 ## Cost guard
 
-The harness uses real LLM calls. Cost ballpark:
+The harness uses real LLM calls. Cost ballpark with the default Sonnet model split (see [`TESTING.md § Cost model`](./TESTING.md#cost-model) for the full table):
 
-- Per turn: ~$0.05-0.20
-- Per content (judge) assertion: ~$0.02-0.05
-- Per full scenario run (10 turns + 8 judges): ~$2-5
+- Per turn: ~$0.10–0.40
+- Per content (judge) assertion: ~$0.02–0.05 (Sonnet) / ~$0.10–0.20 (Opus, opt-in)
+- Per full scenario run (10 turns + ~15 judges): ~$3–5
+- `--runs 5` of one scenario: ~$15–25
 
-Don't loop the harness in a debug session without a kill switch. The runner has a `--max-cost` flag for safety.
+Under a Claude subscription the printed cost is the **API-equivalent** price, useful as a proxy for 5-hour-window quota pressure — not real billing. Either way it's the number to optimize.
+
+`--max-cost` (default $20) aborts the run on cumulative overrun. Use it. Don't loop the harness in a debug session without it.

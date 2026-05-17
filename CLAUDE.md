@@ -72,7 +72,27 @@ python tests/harness/run_all.py --runs 5
 
 Outputs land in `tests/results/<date>-<scenario>-<run>.json`. Each run spins up a fresh scaffold in a temp dir, replays the scenario's inputs by calling `claude -p` with each, runs structural checks after every turn, and runs LLM-judge checks at scenario end.
 
-**The eval suite uses real LLM calls.** Cost ballpark: ~$2-5 per scenario run. Don't loop the harness in a debug session without a kill switch.
+**The eval suite uses real LLM calls.** Cost ballpark with the default model split (see § Model strategy): ~$3-5 per single-run scenario; ~$15-25 for `--runs 5`. The harness enforces `--max-cost` (default $20) and aborts on overrun. Don't loop the harness in a debug session without a kill switch.
+
+## Model strategy
+
+The harness splits work across two model tiers to keep cost down without sacrificing judgment quality.
+
+| Layer | Default model | Override env var | Rationale |
+| --- | --- | --- | --- |
+| Scenario turn execution (`claude -p` ingesting each `turn-NN-*.md`) | `sonnet` | `PM_BRAIN_TURN_MODEL` | Realistic — most PMs will run the skill on Sonnet day-to-day. Cheaper by ~3-5x vs Opus. |
+| Simple judges (structural-shaped questions a rubric can answer mechanically) | `sonnet` | `PM_BRAIN_JUDGE_MODEL` | The judge prompt + rubric does most of the work; Sonnet follows rubrics reliably. |
+| Hard judges (per-assertion `model: opus` in `expected.yaml`) | per-assertion | n/a (opt-in) | Use Opus only when the rubric requires genuinely hard discrimination — e.g., distinguishing "promoted with evidence" from "promoted with weak evidence." |
+| Repo coordination (this Claude, you) | Opus | n/a | Holds the cross-file picture, applies judgment about what to test and what to fix. Subagents are Sonnet by default; spawn Opus subagents only when the task itself needs Opus-level reasoning. |
+
+When adding a new judge assertion to `expected.yaml`, leave `model` unset (Sonnet) unless you've watched Sonnet fail it across multiple runs. Don't pre-emptively pin everything to Opus — that's where the cost blows up.
+
+### How cost is measured under a Claude subscription
+
+You're not on the metered API, so the `total_cost_usd` field returned by `claude -p` is **not** money leaving your account. It's the per-call API-equivalent price the model reports, which the harness uses as a proxy for **how much subscription quota the call consumed**. The Max plan throttles by 5-hour rolling window; the harness sum is the best available signal for "am I about to hit the limit." Two practical consequences:
+
+1. The `--max-cost` flag is a quota guard, not a billing guard. A full `--runs 5` of every scenario will sum to ~$20-30 API-equivalent, which is well inside a normal Max session but not infinite — back off if you've already been working hard that session.
+2. Cost-equivalent printed in `tests/results/*.json` is the right number to optimize. Driving Opus calls down to Sonnet calls *does* reduce real subscription pressure even though no card is charged.
 
 ### When asked to update docs
 

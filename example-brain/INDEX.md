@@ -33,5 +33,8 @@ See [docs/workflows.md](./docs/workflows.md) for the full slash command list and
 - `/decide <slug>` — log a decision (interactive prompt)
 - `/review` — run full maintenance sweep
 - `/strategy-check` — drift check between recent decisions/ingestions and `knowledge/strategy.md`
+- `/ideate <problem>` — generate evidence-grounded solution directions
+- `/risk <feature-slug>` — 5-area risk scan; drafts hypothesis stubs for gaps
+- `/plan <objective>` — turn an objective into discovery questions, hypotheses, experiments, decision points
 
 Conversational equivalents work for all of these. Commands are optional.
