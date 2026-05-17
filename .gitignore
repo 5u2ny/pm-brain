@@ -1,0 +1,23 @@
+# Test run outputs (gitignored by default; pin snapshots manually if needed)
+tests/results/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.pytest_cache/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*~
+
+# Env
+.env
+.env.local
