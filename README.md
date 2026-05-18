@@ -1,6 +1,6 @@
 # PM Brain
 
-[![Claude Code skill](https://img.shields.io/badge/Claude%20Code-skill-d97757)](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests: 15/17 clean + 2 partial](https://img.shields.io/badge/tests-15%2F17%20clean%20%2B%202%20partial-brightgreen)](tests/RESULTS.md) [![Companion: pm-skills](https://img.shields.io/badge/companion-pm--skills-blue)](https://github.com/phuryn/pm-skills)
+[![Claude Code skill](https://img.shields.io/badge/Claude%20Code-skill-d97757)](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests: 404/406 checks (≈99.5%)](https://img.shields.io/badge/tests-404%2F406%20checks%20%28%E2%89%8899.5%25%29-brightgreen)](tests/RESULTS.md) [![Companion: pm-skills](https://img.shields.io/badge/companion-pm--skills-blue)](https://github.com/phuryn/pm-skills)
 
 **A second brain for product managers.** Your PM context — interviews, decisions, hypotheses, stakeholder claims, strategy — lives as plain markdown files in a folder on your laptop. Claude reads them before answering, writes to them after, and runs a weekly sweep that flags what's drifting.
 
@@ -79,7 +79,9 @@ docs/                       # Architecture, how it works, testing, prior art
 
 ## Tests
 
-**17 synthetic PM scenarios. 406 individual checks. 404 pass on the latest run** (≈99.5%, see the [scoreboard](./tests/RESULTS.md)). Each scenario is a multi-turn PM situation — a churn investigation, a stakeholder cadence flag, a contradiction arriving 60 days after a decision — with cached input artifacts and ground-truth assertions. The harness spins up a fresh brain in a temp dir, replays the inputs through `claude -p`, runs structural assertions (files exist, links resolve, evidence rows tagged) after every turn, and runs LLM-judge rubrics on substance at scenario end.
+**17 synthetic PM scenarios. 404 of 406 individual checks pass across the snapshots (≈99.5%).** The split: every structural check passes (329 / 329, 100%) — files exist, links resolve, evidence rows tagged, decision schemas valid; and 75 of 77 LLM-judge content checks pass (≈97%), with two judges missing on the two longest scenarios. Full breakdown in the [scoreboard](./tests/RESULTS.md).
+
+Each scenario is a multi-turn PM situation — a churn investigation, a stakeholder cadence flag, a contradiction arriving 60 days after a decision — with cached input artifacts and ground-truth assertions. The harness spins up a fresh brain in a temp dir, replays the inputs through `claude -p`, runs structural assertions after every turn, and runs LLM-judge rubrics on substance at scenario end.
 
 ```bash
 python tests/harness/run_scenario.py tests/scenarios/01-b2b-churn

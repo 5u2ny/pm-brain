@@ -11,6 +11,39 @@ Cross-references:
 
 ---
 
+## 2026-05-18 — Opus comparison on the two partial scenarios (01 & 02)
+
+**Why we ran this.** The published scoreboard is Sonnet for both turn execution and judges. Two judges miss (01 T9 `insight_promoted_with_dissent_preserved`, 02 T5 `risk_area_updated`) and `all_internal_links_valid` had been flaking on Sonnet 5-run sweeps of scenario 02 (3 / 5 broken-link failures). The natural question: would full Opus (turns + judges) fix these? And if so, is the cost justified enough to recommend Opus as the default, or to pin specific assertions with `model: opus`?
+
+**Setup.** One run each of scenarios 01 and 02 with `PM_BRAIN_TURN_MODEL=opus PM_BRAIN_JUDGE_MODEL=opus`. Snapshots committed under [`tests/results/snapshots/01-b2b-churn-opus.json`](../tests/results/snapshots/01-b2b-churn-opus.json) and [`tests/results/snapshots/02-inherited-folder-opus.json`](../tests/results/snapshots/02-inherited-folder-opus.json).
+
+**Findings.**
+
+| Scenario | Structural | Content | Cost | Notable shifts vs Sonnet snapshot |
+| --- | --- | --- | --- | --- |
+| 01 b2b-churn (Opus) | 23/23 (100%) | 10/11 (91%) | $13.37 | T9 `insight_promoted_with_dissent_preserved` **fixed**. New failure: T6 `contradiction_surfaced` — agent logged the Brex contradiction under `Open questions / caveats` instead of an `Evidence against:` row, so the dissent isn't in the audit-trail location the judge looks at. |
+| 02 inherited-folder (Opus) | 30/30 (100%) | 4/10 (40% raw) | $13.77 | 4 of 6 content "fails" were pure `claude_not_found ×3` flake-retry exhaustion (T1, T5, T6, T9). 1 UNCERTAIN (T7 `staleness_flagged`). 1 genuine FAIL: T8 `insight_promoted_with_dissent` — Opus, like Sonnet, judged that promotion threshold wasn't met and held the insight at `pending-promotion`. |
+
+**On `all_internal_links_valid`.** Both Opus runs pass it cleanly (0 / 2 broken vs Sonnet 5-run sweep 3 / 5). The broken-link pattern is a Sonnet-tier capability gap, not pure scaffold gap. **Not** a reason on its own to switch the default; structural failures here have always been edge-case path arithmetic (`../product/metrics.md` from depth-1 files) and the depth-1 scaffold patch addressed the most common case.
+
+**Cost comparison.** Opus single-run is ~2.6× Sonnet single-run on the same scenario (Sonnet 01 was $5.13, Opus 01 was $13.37; Sonnet 02 was $6.37, Opus 02 was $13.77). Pinning Opus on the *individual* T9 / T8 judges (per-assertion `model: opus` in `expected.yaml`) would cost cents per run, not dollars — but the failure modes Opus changes are mostly turn-side, not judge-side, so judge-pinning alone wouldn't reach them.
+
+**Decision.** **Keep Sonnet as the default. Do not pin Opus on any assertion.** Three reasons:
+
+1. **Opus is a partial win, not a fix.** It resolved 01 T9 but introduced a new T6 failure (contradiction in wrong location) and did not resolve 02 T8 (still refused promotion). Net judge-pass count on the two scenarios moves from 20 → 14 once you count Opus 02's flake-retry exhaustions; even discounting those, the win is one-judge-for-one-judge in scenario 01 only.
+2. **Realism.** Most PMs running the skill day-to-day will be on Sonnet. The published scoreboard should reflect the tier users actually run. Opus snapshots live alongside as reference data, not as the headline.
+3. **Per-assertion pinning would mislead.** Pinning Opus on T9 alone would push the scoreboard to 76 / 77 — but only because the scoreboard now mixes tiers. A future reader can't tell which assertions "really" pass without checking the YAML. Cleaner to publish a single-tier scoreboard and link to the Opus comparison as a footnote.
+
+**Open follow-ups (not done in this commit).**
+
+- Flake-retry exhaustion remains a problem even under fully sequential load — scenario 02 ran alone on Opus and still hit 4 judges with `claude_not_found ×3`. The 3-attempt budget needs revisiting; the parallel-pressure theory from the prior session was wrong.
+- The 01 T6 Opus failure suggests the scaffold's "evidence against" vs "open questions / caveats" boundary is ambiguous when a counter-signal is *also* an open question. A future scaffold tweak could clarify which field wins.
+- Broken-link prevention via "create the file in the same turn you link to it, verified by a hook" is a candidate fix worth designing; deferred until after this round.
+
+**Files touched.** [`tests/results/snapshots/01-b2b-churn-opus.json`](../tests/results/snapshots/01-b2b-churn-opus.json), [`tests/results/snapshots/02-inherited-folder-opus.json`](../tests/results/snapshots/02-inherited-folder-opus.json), [`README.md`](../README.md), [`tests/RESULTS.md`](../tests/RESULTS.md).
+
+---
+
 ## 2026-05-17 — Provenance vocabulary refactor (cross-cutting)
 
 **Finding.** Early scenario runs flagged "no provenance" failures even when the agent's behavior was epistemically honest. The original rule was *workflow-shaped*: every load-bearing claim had to go through `source/ → ingestion/ → hypothesis`. Real PM evidence often skips that pipeline (a hallway conversation, an industry rule of thumb, a PM intuition) and forcing those into a synthetic ingestion record made the brain *less* trustworthy, not more.

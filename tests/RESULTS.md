@@ -6,10 +6,11 @@ The harness spins up a fresh PM Brain scaffold in a temp dir, replays the scenar
 
 ## Headline
 
-- **15 of 17** scenarios passed cleanly on the most recent run (every per-turn structural + every judge `verdict=PASS`).
-- **2 of 17** scenarios passed all structural checks and all but **one** content judge each — both are the longest, hardest scenarios (10 turns, ~$5–6 of model spend). The specific judges and the remediation status are in [§ Known residuals](#known-residuals) below.
-- **404 of 406** individual checks pass across the 17 snapshots (≈99.5%).
-- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost (Sonnet for turns + most judges, Opus opt-in for hard discrimination).
+- **404 of 406 individual checks pass across the 17 snapshots (≈99.5%).** The split:
+  - **Structural: 329 / 329 (100%).** Every mechanical check — files exist, links resolve, evidence rows tagged with provenance, decision schemas valid, no orphan evidence, no silent demotions — passes on every snapshot. The brain's scaffolded foundation holds without exception.
+  - **Content (LLM judges): 75 / 77 (≈97%).** Two judges miss on the two longest scenarios (01 b2b-churn T9 and 02 inherited-folder T5). Specific judges and remediation status in [§ Known residuals](#known-residuals).
+- **15 of 17 scenarios pass cleanly** (every structural + every judge `verdict=PASS`); the other 2 pass all structural and all but one content judge each.
+- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost (Sonnet for turns + most judges, Opus opt-in for hard discrimination). A separate Opus comparison run on the two partial scenarios is committed under [`results/snapshots/*-opus.json`](results/snapshots/) — see [`docs/testing-decisions.md`](../docs/testing-decisions.md) for the cost-vs-quality reading.
 
 ## Scoreboard
 
