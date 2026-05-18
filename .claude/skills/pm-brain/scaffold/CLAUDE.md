@@ -184,6 +184,15 @@ One-off observations stay in ingestion until they accumulate. Maintenance promot
 
 Updating a hypothesis file is necessary but not sufficient for a user-pattern promotion. If you find yourself thinking "I promoted the hypothesis, I'm done" — you're not done; the insights.md row is the other half. Counter-signals get preserved under `## Contradictions` in the same file, not flattened.
 
+**Promotion checklist — every claimed supporter and every dissenter must be named.** When you write or update a promoted insight in `knowledge/users/insights.md`, run this checklist in the same turn — do NOT defer it:
+
+1. **Count check.** If the insight's header or summary line claims "N=3" (or any specific count), `## Evidence` must contain exactly N rows, one per supporting source, each a path-typed link to its `source/` or `ingestion/` file. Header counts that don't match Evidence rows are a fail, full stop.
+2. **Name every supporter by slug.** Each Evidence row reads `[<source-slug>](../../source/<kind>/<file>.md) — <one-line claim>`. Saying "three customers said X" without listing them by source slug means the audit trail can't be followed. Don't summarize them away.
+3. **Scan the same population for non-supporters.** Among the artifacts you've already ingested from the same population (e.g. mid-market PMs, ops-risk subteams), is there *any* signal that contradicts or qualifies the promoted insight? If yes, that signal MUST appear as a row under `## Contradictions` with the same path-typed link form — even if it's a subteam mention buried inside an otherwise-supporting interview. Dissent-confirming evidence (a sub-segment that disagrees with the majority within the same interview) is dissent, not support — never count it as a confirming row.
+4. **Persona surface.** If the dissent suggests a coherent counter-persona, add it as `candidate` in `knowledge/users/personas.md` (or your per-persona file) with one line of evidence. Don't fold the counter-population into the promoted insight's persona.
+
+If you cannot complete all four steps in the same turn the insight is promoted, keep the insight at `proposed` / `pending-promotion` status — do not promote with an incomplete audit trail.
+
 ## Strategy tension threshold
 
 Do not create a `strategy.md § Tensions` entry from:
@@ -245,12 +254,13 @@ Cross-linking is how this system stays a brain instead of a pile. Every feature 
 
 | File location | Depth | To reach a top-level area (`hypotheses/`, `source/`, `ingestion/`, `decisions/`, `stakeholders/`, `knowledge/`) |
 |---|---|---|
+| `knowledge/<file>.md` (e.g. `knowledge/strategy.md`, `knowledge/INDEX.md`) | 1 | `../<area>/...` (one `..`) |
 | `hypotheses/<slug>.md`, `decisions/<file>.md`, `stakeholders/<file>.md` | 1 | `../<area>/...` (one `..`) |
 | `source/<kind>/<file>.md`, `ingestion/<kind>/<file>.md` | 2 | `../../<area>/...` (two `..`) |
 | `knowledge/<area>/<file>.md` (e.g. `knowledge/product/roadmap.md`) | 2 | `../../<area>/...` (two `..`) |
 | `knowledge/<area>/<sub>/<file>.md` (e.g. `knowledge/market/competitors/vanta.md`) | 3 | `../../../<area>/...` (three `..`) |
 
-Before saving any file, mentally count the directory levels from the file's parent up to the repo root, then down to the target. From `knowledge/market/competitors/vanta.md` to `hypotheses/foo.md` is `../../../hypotheses/foo.md` (three `..`), not `../../hypotheses/foo.md`. The `all_internal_links_valid` audit catches these.
+Before saving any file, mentally count the directory levels from the file's parent up to the repo root, then down to the target. From `knowledge/market/competitors/vanta.md` to `hypotheses/foo.md` is `../../../hypotheses/foo.md` (three `..`), not `../../hypotheses/foo.md`. From `knowledge/strategy.md` to `knowledge/product/metrics.md`, it is `./product/metrics.md` (same dir) — NOT `../product/metrics.md`, which would point above `knowledge/` to a non-existent top-level `product/`. The `all_internal_links_valid` audit catches these.
 
 ## Schemas
 

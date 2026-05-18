@@ -1,5 +1,8 @@
 # Test run outputs (gitignored by default; pin snapshots manually if needed)
-tests/results/
+# Ignore all .json files directly in tests/results/ (timestamped per-run outputs)
+# but allow the curated tests/results/snapshots/ directory through for newsletter readers.
+tests/results/*.json
+tests/results/*.log
 
 # Kept work dirs from --keep-workdir runs (debug artifacts; never committed)
 tests/workdir/

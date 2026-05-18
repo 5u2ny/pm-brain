@@ -1,5 +1,7 @@
 # PM Brain
 
+[![Claude Code skill](https://img.shields.io/badge/Claude%20Code-skill-d97757)](https://docs.claude.com/en/docs/agents-and-tools/agent-skills/overview) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests: 15/17 clean + 2 partial](https://img.shields.io/badge/tests-15%2F17%20clean%20%2B%202%20partial-brightgreen)](tests/RESULTS.md) [![Companion: pm-skills](https://img.shields.io/badge/companion-pm--skills-blue)](https://github.com/phuryn/pm-skills)
+
 **A second brain for product managers.** Your PM context — interviews, decisions, hypotheses, stakeholder claims, strategy — lives as plain markdown files in a folder on your laptop. Claude reads them before answering, writes to them after, and runs a weekly sweep that flags what's drifting.
 
 You manage one product. Your context is scattered across Notion, Linear, Slack, your dashboards, and your head. You ship a feature. Six weeks later, nobody remembers why you killed the other option. PM Brain fixes that.
@@ -32,18 +34,28 @@ No vector database. No embeddings. No auto-tagging. The whole brain is human-rea
 
 ## Install
 
+One command, no full repo clone:
+
 ```bash
-# Drop the skill into your Claude Code skills directory
-cp -R .claude/skills/pm-brain ~/.claude/skills/
+mkdir -p ~/.claude/skills && \
+  curl -L https://github.com/phuryn/pm-brain/archive/refs/heads/main.tar.gz | \
+  tar xz --strip-components=3 -C ~/.claude/skills pm-brain-main/.claude/skills/pm-brain/
+```
 
-# Open Claude Code in the directory where you want the brain
+That pulls only the skill folder (`.claude/skills/pm-brain/`) and drops it into your Claude Code skills directory. The rest of this repo — `example-brain/`, `tests/`, `docs/` — stays on GitHub for you to browse, not on your laptop.
+
+Then, in any folder where you want the brain:
+
+```bash
 cd ~/projects/my-product-brain
-
-# Invoke
+claude
+# then in the Claude Code prompt:
 /pm-brain
 ```
 
 The skill detects what's already in the directory. An empty folder gets a fresh start (**greenfield**). A folder with existing PM artifacts — Notion exports, a Jira CSV, meeting notes — gets read and absorbed (**migration**). Either way, a short 5-batch interview captures company, role, and current priorities. The scaffold drops in, the brain commits locally. Never pushes.
+
+> Windows / no `tar`? Fallback: clone the repo and copy the folder by hand — `git clone https://github.com/phuryn/pm-brain.git && cp -R pm-brain/.claude/skills/pm-brain ~/.claude/skills/`. On Windows the install target is `%USERPROFILE%\.claude\skills\`.
 
 ## The six commands
 
@@ -67,13 +79,17 @@ docs/                       # Architecture, how it works, testing, prior art
 
 ## Tests
 
-Synthetic scenarios + a harness that runs them through the skill via `claude -p` and asserts the brain's state after each turn. Three eval layers — **structural** (deterministic Python asserts), **content** (LLM-as-judge with tight rubrics), **convergence** (per-assertion pass rate across N runs).
+**17 synthetic PM scenarios. 406 individual checks. 404 pass on the latest run** (≈99.5%, see the [scoreboard](./tests/RESULTS.md)). Each scenario is a multi-turn PM situation — a churn investigation, a stakeholder cadence flag, a contradiction arriving 60 days after a decision — with cached input artifacts and ground-truth assertions. The harness spins up a fresh brain in a temp dir, replays the inputs through `claude -p`, runs structural assertions (files exist, links resolve, evidence rows tagged) after every turn, and runs LLM-judge rubrics on substance at scenario end.
 
 ```bash
 python tests/harness/run_scenario.py tests/scenarios/01-b2b-churn
 ```
 
-Full reference — scenario format, ground-truth schema, harness internals, assumptions, cost model, current coverage, gaps, and how to add a scenario — lives in [`tests/TESTING.md`](./tests/TESTING.md). The 90-second operator quickstart is in [`tests/README.md`](./tests/README.md). Design rationale (why scenarios over per-turn unit tests, why LLM-as-judge is reserved) is in [`docs/testing.md`](./docs/testing.md).
+- **[`tests/RESULTS.md`](./tests/RESULTS.md)** — scoreboard, per-scenario JSON snapshots, the two known residual judge failures (called out honestly, not hidden)
+- **[`tests/README.md`](./tests/README.md)** — 90-second operator quickstart
+- **[`tests/TESTING.md`](./tests/TESTING.md)** — scenario format, ground-truth schema, harness internals, cost model, coverage map
+- **[`docs/testing.md`](./docs/testing.md)** — design rationale (why scenarios over per-turn unit tests, why LLM-as-judge is reserved)
+- **[`docs/testing-decisions.md`](./docs/testing-decisions.md)** — running log of what eval runs taught us and the skill changes that came out of them
 
 ## Docs
 
@@ -89,9 +105,23 @@ Full reference — scenario format, ground-truth schema, harness internals, assu
 
 PM Brain is the memory layer. [PM Skills](https://github.com/phuryn/pm-skills) are the workflow modules — how to run a JTBD interview, how to score with RICE, how to design an experiment. They compose: the skill is how to do the work once, the brain is what you know across all the times you did it.
 
+## Contributing
+
+Issues first, please. The skill is the load-bearing artifact for every install, so changes need discussion before code. The flow:
+
+1. Open a GitHub issue describing the use case, the missing behavior, or the scenario you'd like covered. Link to your own brain folder if you can — concrete examples beat abstract requests.
+2. For documentation, walkthrough, or scenario contributions (new `tests/scenarios/<NN-slug>/`), a PR after issue discussion is welcome.
+3. For changes to the skill itself (`.claude/skills/pm-brain/`), please wait for explicit go-ahead on the issue before opening a PR — the eval suite needs to re-run and the example-brain may need to mirror structural changes. The repo-level [`CLAUDE.md`](./CLAUDE.md) describes the work patterns in detail.
+
+Run the eval suite before sending a PR if your change could affect any scenario:
+
+```bash
+python tests/harness/run_all.py --max-cost 50
+```
+
 ## License
 
-MIT.
+[MIT](./LICENSE).
 
 ## Credits
 
