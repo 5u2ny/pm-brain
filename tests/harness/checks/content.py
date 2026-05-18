@@ -3,12 +3,27 @@ content.py — LLM-judge runner. Loads a rubric, builds the judge prompt with th
 target file content + scenario context, calls `claude -p`, parses the VERDICT line.
 
 UNCERTAIN counts as FAIL for the run. Aggregate pass-rate across N runs handles the noise.
+
+Subprocess flakes (claude_not_found, timeout, empty result) are NOT brain-quality
+signals — they're harness-environmental. We retry such invocations up to JUDGE_RETRY_MAX
+times with backoff before recording the fail. Real model output (PASS/FAIL/UNCERTAIN,
+or a non-empty response with no VERDICT line) is never retried — that would mask
+genuine quality regressions behind noise.
 """
 
 from __future__ import annotations
 
 import re
+import time
 from pathlib import Path
+
+# Retry tuning for subprocess-level flakes only (see _is_flake_invocation).
+# 3 attempts caps wasted spend: if a launch race or transient throttle doesn't recover
+# by attempt 3, attempt 4+ would just pay for more empty calls.
+JUDGE_RETRY_MAX = 3
+JUDGE_RETRY_BACKOFF_S = (1.0, 3.0, 8.0)  # sleep BEFORE attempt index N+1 (post-attempt-1, post-attempt-2)
+# Invocation error codes that mean "subprocess never produced a real response" — not the model's fault.
+_FLAKE_ERROR_CODES = frozenset({"claude_not_found", "timeout"})
 
 
 JUDGE_PROMPT_TEMPLATE = """\
@@ -127,17 +142,53 @@ def run_judge(
     )
 
     model = assertion.get("model") or default_model
-    invocation = invoke_claude(prompt, cwd=work_dir, timeout_s=judge_timeout_s, model=model)
-    cost_tracker.add("judge", judge_name, invocation["cost_usd"])
 
-    verdict, reason = _parse_verdict(invocation["result_text"])
+    flake_attempts: list[str] = []  # short error codes from any retried-over invocations, for audit
+    invocation = None
+    verdict = "UNPARSED"
+    reason = ""
+    for attempt in range(1, JUDGE_RETRY_MAX + 1):
+        if attempt > 1:
+            time.sleep(JUDGE_RETRY_BACKOFF_S[min(attempt - 2, len(JUDGE_RETRY_BACKOFF_S) - 1)])
+        invocation = invoke_claude(prompt, cwd=work_dir, timeout_s=judge_timeout_s, model=model)
+        # Always track cost — every attempt that hit the API consumed quota even if it returned nothing.
+        cost_tracker.add("judge", judge_name, invocation["cost_usd"])
+        verdict, reason = _parse_verdict(invocation["result_text"])
+        if not _is_flake_invocation(invocation, verdict, reason):
+            break
+        flake_attempts.append(invocation.get("error") or "empty-response")
+
     passed = verdict == "PASS"
     detail_bits = [f"verdict={verdict}", f"target={target_summary}"]
     if reason:
         detail_bits.append(f"reason={reason}")
-    if invocation.get("error"):
+    if invocation and invocation.get("error"):
         detail_bits.append(f"error={invocation['error']}")
+    if flake_attempts:
+        # Surface how many retries were burned and why, so a snapshot reader can tell signal from noise.
+        detail_bits.append(f"flake_retries={len(flake_attempts)}({','.join(flake_attempts)})")
     return _result(f"judge:{judge_name}", passed, " | ".join(detail_bits))
+
+
+def _is_flake_invocation(invocation: dict, verdict: str, reason: str) -> bool:
+    """
+    True iff this invocation's failure looks like a subprocess-level flake (worth retrying),
+    not a real model output (must NOT retry — would mask genuine misses).
+
+    Flake signatures:
+      - invocation.error in {claude_not_found, timeout}
+      - empty result_text (parsed as UNPARSED with the 'empty judge response' reason)
+
+    Not flakes (do not retry):
+      - verdict in {PASS, FAIL, UNCERTAIN} — the model answered
+      - UNPARSED with a non-empty response that simply lacked a VERDICT line — the model
+        produced output but mis-followed the instruction; that's a quality signal, not noise.
+    """
+    if invocation.get("error") in _FLAKE_ERROR_CODES:
+        return True
+    if verdict == "UNPARSED" and reason == "empty judge response":
+        return True
+    return False
 
 
 # ============================================================
