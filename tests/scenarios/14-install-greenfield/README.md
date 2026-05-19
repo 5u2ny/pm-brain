@@ -17,7 +17,7 @@ verify the install produced a coherent, populated brain ready for first use.
 
 ## Why a separate scenario
 
-The other 13 scenarios bootstrap the scaffold directly (via `bootstrap_brain` in the harness)
+The other 16 scenarios bootstrap the scaffold directly (via `bootstrap_brain` in the harness)
 and skip the `/pm-brain` orchestration — appropriate for testing PM lifecycle moves on a
 known-good brain. This scenario is the only one that exercises mode detection, the interview
 flow, placeholder substitution, and the self-test step.
