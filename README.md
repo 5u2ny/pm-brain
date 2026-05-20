@@ -8,9 +8,17 @@ You manage one product. Your context is scattered across Notion, Linear, Slack, 
 
 > **See it in action:** [A week with PM Brain: Lena's first five days](./docs/walkthrough.md) is a short story of one PM using it on a real team. New here? Start there.
 
+> **Research preview.** The architecture has months of dogfooding behind it on a sister content brain; the product as installed by real PMs in real organizations is days old. The eval suite (404 of 406 checks pass) is the floor. Real-world install feedback is how the next version gets better. Open [issues](https://github.com/phuryn/pm-brain/issues) or join the conversation per the launch post.
+
 ## Install
 
-One command, no full repo clone:
+Two stages: install the skill once, then bootstrap a brain in any folder you want.
+
+### Stage 1: install the skill (one time)
+
+The skill is global. It lands in `~/.claude/skills/pm-brain/` and is available across every Claude Code session, in any working directory.
+
+**macOS / Linux / WSL / Git Bash:**
 
 ```bash
 mkdir -p ~/.claude/skills && \
@@ -18,9 +26,22 @@ mkdir -p ~/.claude/skills && \
   tar xz --strip-components=3 -C ~/.claude/skills pm-brain-main/.claude/skills/pm-brain/
 ```
 
-That pulls only the skill folder (`.claude/skills/pm-brain/`) into your Claude Code skills directory. The rest of this repo (`example-brain/`, `tests/`, `docs/`) stays on GitHub for you to browse, not on your laptop.
+**Windows PowerShell:**
 
-Then, in any folder where you want the brain:
+```powershell
+$dest = "$env:USERPROFILE\.claude\skills"
+New-Item -ItemType Directory -Force -Path $dest | Out-Null
+irm "https://github.com/phuryn/pm-brain/archive/refs/heads/main.zip" -OutFile "$env:TEMP\pmb.zip"
+Expand-Archive "$env:TEMP\pmb.zip" "$env:TEMP\pmb" -Force
+Copy-Item "$env:TEMP\pmb\pm-brain-main\.claude\skills\pm-brain" $dest -Recurse -Force
+Remove-Item "$env:TEMP\pmb.zip","$env:TEMP\pmb" -Recurse -Force
+```
+
+Either path pulls only the skill folder (`.claude/skills/pm-brain/`) into your Claude Code skills directory. The rest of this repo (`example-brain/`, `tests/`, `docs/`) stays on GitHub for you to browse, not on your laptop.
+
+### Stage 2: bootstrap a brain (per-product)
+
+In any folder where you want the brain to live:
 
 ```bash
 cd ~/projects/my-product-brain
@@ -31,7 +52,9 @@ claude
 
 The skill detects what's already in the directory. An empty folder gets a fresh start (**greenfield**). A folder with existing PM artifacts (Notion exports, a Jira CSV, meeting notes) gets read and absorbed (**migration**). Either way, a short 5-batch interview captures company, role, and current priorities. The scaffold drops in, the brain commits locally. Never pushes.
 
-> Windows / no `tar`? Fallback: clone the repo and copy the folder by hand. `git clone https://github.com/phuryn/pm-brain.git && cp -R pm-brain/.claude/skills/pm-brain ~/.claude/skills/`. On Windows the install target is `%USERPROFILE%\.claude\skills\`.
+> **Migration is for your current state. Don't backfill old artifacts retroactively.** Migration mode reads your active strategy, in-flight hypotheses, recent decisions, current stakeholder list. That's the goal. Don't try to manually `/ingest` 200 old interview transcripts and six months of Slack threads. If a stale artifact matters, it'll come up through current work and you'll ingest it then. Forcing them in now wastes a weekend and clogs the durable layer.
+
+> Stuck? Universal fallback (any OS with `git`): `git clone https://github.com/phuryn/pm-brain.git && cp -R pm-brain/.claude/skills/pm-brain ~/.claude/skills/`. On Windows replace the `cp -R` with `Copy-Item pm-brain\.claude\skills\pm-brain $env:USERPROFILE\.claude\skills\ -Recurse`.
 
 ## What it does (one loop)
 
@@ -101,9 +124,11 @@ python tests/harness/run_scenario.py tests/scenarios/01-b2b-churn
 ## Docs
 
 - [`docs/walkthrough.md`](./docs/walkthrough.md): *Start here.* A week with PM Brain, told as a story.
+- [`docs/why-this-matters.md`](./docs/why-this-matters.md): five failure modes that kill most AI memory systems by month three, and the five structural choices that answer them.
 - [`docs/glossary.md`](./docs/glossary.md): every term used in PM Brain, defined in plain English.
 - [`docs/how-it-works.md`](./docs/how-it-works.md): the technical version of the walkthrough, with files and folders.
 - [`docs/architecture.md`](./docs/architecture.md): the design choices (deterministic scaffold + adaptive prompts) and why.
+- [`docs/scaling.md`](./docs/scaling.md): how the brain stays healthy as the folder grows. Growth shapes, compression mechanisms, realistic envelope numbers.
 - [`docs/testing.md`](./docs/testing.md): how the eval suite works, scenario format, ground-truth schema.
 - [`docs/testing-decisions.md`](./docs/testing-decisions.md): running log of what eval runs taught us and the design calls that came out of them. Read when an assertion or scaffold rule looks arbitrary and you want to know *why it's there*.
 - [`docs/prior-art.md`](./docs/prior-art.md): Zettelkasten, RAG memory, agent OS patterns. What's borrowed and what's new.

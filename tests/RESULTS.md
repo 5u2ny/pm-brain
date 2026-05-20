@@ -6,11 +6,11 @@ The harness spins up a fresh PM Brain scaffold in a temp dir, replays the scenar
 
 ## Headline
 
-- **404 of 406 individual checks pass across the 17 snapshots (≈99.5%).** The split:
+- **404 of 406 individual checks pass across the 17 snapshots (≈99.5%), on Claude Sonnet 4.6.** The split:
   - **Structural: 329 / 329 (100%).** Every mechanical check (files exist, links resolve, evidence rows tagged with provenance, decision schemas valid, no orphan evidence, no silent demotions) passes on every snapshot. The brain's scaffolded foundation holds without exception.
   - **Content (LLM judges): 75 / 77 (≈97%).** Two judges miss on the two longest scenarios (01 b2b-churn T9 and 02 inherited-folder T5). Specific judges and remediation status in [§ Known residuals](#known-residuals).
 - **15 of 17 scenarios pass cleanly** (every structural + every judge `verdict=PASS`); the other 2 pass all structural and all but one content judge each.
-- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost (Sonnet for turns + most judges, Opus opt-in for hard discrimination). A separate Opus comparison run on the two partial scenarios is committed under [`results/snapshots/*-opus.json`](results/snapshots/). See [`docs/testing-decisions.md`](../docs/testing-decisions.md) for the cost-vs-quality reading.
+- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost on Claude Sonnet 4.6, including the LLM judges. The committed `*-opus.json` snapshots for scenarios 01 and 02 are Opus comparison runs from when we suspected the residuals were model-limited. Opus didn't change the verdict on either, so the headline numbers stand on pure Sonnet 4.6. See [`docs/testing-decisions.md`](../docs/testing-decisions.md) for the cost-vs-quality reading.
 
 ## Scoreboard
 
@@ -68,6 +68,10 @@ python tests/harness/run_all.py --runs 5 --max-cost 100
 
 Each invocation writes a fresh JSON under [`results/`](results/) (gitignored by default). The committed [`results/snapshots/`](results/snapshots/) directory is the latest representative run per scenario. Re-running locally will produce timestamped peers, not overwrites.
 
-## Model split
+## Model
 
-The harness defaults to Sonnet for scenario-turn execution and most judges; Opus is opt-in per-assertion in `expected.yaml`. See [`CLAUDE.md § Model strategy`](../CLAUDE.md#model-strategy) for the cost rationale.
+All 17 primary scenario snapshots and their LLM judges ran on **Claude Sonnet 4.6**. No mixed split.
+
+The committed `*-opus.json` snapshots for scenarios 01 and 02 are Opus comparison runs from when we suspected the content-judge failures were model-limited. Opus didn't change the verdict on either; both residuals persist. The Opus opt-in is preserved in `expected.yaml` per-assertion for future investigations, but the headline numbers stand on pure Sonnet 4.6.
+
+See [`CLAUDE.md § Model strategy`](../CLAUDE.md#model-strategy) for the cost rationale and [`docs/testing-decisions.md`](../docs/testing-decisions.md) for what the Opus runs taught us about which failure modes are model-limited (none of these two, as it turns out) vs. scaffold-limited.
