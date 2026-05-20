@@ -135,6 +135,8 @@ python tests/harness/run_scenario.py tests/scenarios/01-b2b-churn
 
 ## Compose with PM Skills
 
+![PM Brain composes with PM Skills](docs/screenshots/pm-brain-pm-skills.webp)
+
 PM Brain is the memory layer. [PM Skills](https://github.com/phuryn/pm-skills) are the workflow modules: how to run a JTBD interview, how to score with RICE, how to design an experiment. They compose. The skill is how to do the work once. The brain is what you know across all the times you did it.
 
 ## Contributing
