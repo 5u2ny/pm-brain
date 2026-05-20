@@ -10,7 +10,7 @@ A folder of markdown files in a git repo on your laptop. That's it. No database,
 
 ### Ingest
 
-To feed something — a transcript, a Slack thread, a doc, a quick note — into the brain so it's there for later. The skill copies the original under `source/`, writes a structured synthesis under `ingestion/`, and updates the durable areas (hypotheses, decisions, stakeholders) that the new signal touches.
+To feed something (a transcript, a Slack thread, a doc, a quick note) into the brain so it's there for later. The skill copies the original under `source/`, writes a structured synthesis under `ingestion/`, and updates the durable areas (hypotheses, decisions, stakeholders) that the new signal touches.
 
 You can ingest from a file (`/ingest transcript.md`), from a connected app (Notion, Jira, Slack via Claude's app connectors), or from a quick line in chat ("Capture that the eng lead pushed back on the Q3 scope in standup today").
 
@@ -20,14 +20,14 @@ Where a claim came from. Every load-bearing line in the brain wears a small tag 
 
 | Tag | Means |
 |---|---|
-| `[source/interviews/2026-05-19-northridge.md]` | A real artifact lives at that path — go read it |
+| `[source/interviews/2026-05-19-northridge.md]` | A real artifact lives at that path. Go read it. |
 | `[ingestion/interviews/...]` | A synthesis note exists; the original is one link away |
 | `(stakeholder-verbal, rahul-pillai, 2026-05-20)` | Someone said this out loud or in a fast Slack message, no document behind it |
 | `(intuition, PM, 2026-05-20)` | Your own hunch, captured honestly as a hunch |
 | `(industry-knowledge)` | Generally known in the field, not from your specific product |
 | `(chat, no artifact)` | Mentioned in chat with the agent, nothing else backs it |
 
-The tag matters more than most people expect. A "we need dark mode" claim from one stakeholder verbal lands very differently than the same claim across 27 documented sales calls — even when both are technically "in the brain."
+The tag matters more than most people expect. A "we need dark mode" claim from one stakeholder verbal lands very differently than the same claim across 27 documented sales calls, even when both are technically "in the brain."
 
 ### Hypothesis
 
@@ -35,15 +35,15 @@ A statement about your product, users, or market that you're tracking the eviden
 
 Statuses, in order:
 
-- **`candidate`** — fresh, just opened, may have one observation
-- **`proposed`** — has two or three independent observations
-- **`validated`** — enough evidence to act on
-- **`demoted`** — evidence contradicts it; kept for the record, not for planning
-- **`archived`** — resolved or stale, moved out of active rotation
+- **`candidate`**: fresh, just opened, may have one observation
+- **`proposed`**: has two or three independent observations
+- **`validated`**: enough evidence to act on
+- **`demoted`**: evidence contradicts it; kept for the record, not for planning
+- **`archived`**: resolved or stale, moved out of active rotation
 
 ### Decision file
 
-A record under `decisions/` of a real call you made — what you decided, what evidence you had, what alternatives you considered, and the **reversal condition** (see below). Decisions are append-only in spirit: you don't quietly rewrite history when something changes; you add a new entry that links back.
+A record under `decisions/` of a real call you made: what you decided, what evidence you had, what alternatives you considered, and the **reversal condition** (see below). Decisions are append-only in spirit: you don't quietly rewrite history when something changes; you add a new entry that links back.
 
 ### Reversal condition
 
@@ -55,11 +55,11 @@ A signal that's interesting but doesn't (yet) clear the bar for action. The skil
 
 ### Audit trail
 
-The path from any claim in the brain back to the original artifact. Click a link in a synthesis note, you get to the source. Click the source citation in a decision, you get to the interview. This is what makes the brain useful six months later — not just *what* you decided, but *what you knew at the time*.
+The path from any claim in the brain back to the original artifact. Click a link in a synthesis note, you get to the source. Click the source citation in a decision, you get to the interview. This is what makes the brain useful six months later: not just *what* you decided, but *what you knew at the time*.
 
 ### Contradiction
 
-Two pieces of evidence in the brain that point opposite directions. The skill surfaces contradictions automatically — it doesn't resolve them. Resolution is a judgment call you make, often by going back to talk to the source or gathering new evidence.
+Two pieces of evidence in the brain that point opposite directions. The skill surfaces contradictions automatically. It doesn't resolve them. Resolution is a judgment call you make, often by going back to talk to the source or gathering new evidence.
 
 ### Drift
 
@@ -71,11 +71,11 @@ The folder where the original artifact lives, untouched. A transcript, a meeting
 
 ### `ingestion/`
 
-The folder where the synthesis of an artifact lives — what the agent extracted, who said what, dates, links back to the source. Edited when something gets re-read with new context.
+The folder where the synthesis of an artifact lives: what the agent extracted, who said what, dates, links back to the source. Edited when something gets re-read with new context.
 
 ### `knowledge/`
 
-The folder of durable area files — strategy, product, users, market, org. Stable picture of what you know. Updated more slowly than ingestion notes, because durable knowledge moves slower than fresh signals.
+The folder of durable area files: strategy, product, users, market, org. Stable picture of what you know. Updated more slowly than ingestion notes, because durable knowledge moves slower than fresh signals.
 
 ### `hypotheses/`
 
@@ -106,7 +106,7 @@ The implicit ordering the skill uses when two pieces of evidence disagree:
 
 > documented decision  >  documented research  >  documented stakeholder claim  >  verbal stakeholder claim  >  PM intuition
 
-This isn't a rigid rule. It's a default — when something further down the list contradicts something further up, the brain surfaces both and tags the gap. You decide what to do with it.
+This isn't a rigid rule. It's a default. When something further down the list contradicts something further up, the brain surfaces both and tags the gap. You decide what to do with it.
 
 ### Migration mode
 
@@ -118,8 +118,8 @@ The mode the skill enters when you run `/pm-brain` in an empty directory. Same b
 
 ### Self-test
 
-A short check the skill runs right after it scaffolds a new brain — a make-believe ingestion that exercises the read path, the write path, and the provenance tagging. If something's wrong with your install, you catch it in the first minute, not the first month.
+A short check the skill runs right after it scaffolds a new brain: a make-believe ingestion that exercises the read path, the write path, and the provenance tagging. If something's wrong with your install, you catch it in the first minute, not the first month.
 
 ---
 
-If something else needs a definition, [open an issue](https://github.com/anthropics/claude-code/issues) — the glossary is meant to be exhaustive, and a missing term is a doc bug.
+If something else needs a definition, [open an issue](https://github.com/phuryn/pm-brain/issues). The glossary is meant to be exhaustive, and a missing term is a doc bug.

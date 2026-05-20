@@ -1,10 +1,10 @@
 # tests/
 
-Eval suite for the PM Brain skill. A *scenario* here is a short, scripted story we feed the skill — a sequence of interviews, meetings, or messages — so we can check that the resulting **brain** (the folder of markdown files the skill maintains) ends up the way it should. The check happens after every turn.
+Eval suite for the PM Brain skill. A *scenario* here is a short, scripted story we feed the skill (a sequence of interviews, meetings, or messages) so we can check that the resulting **brain** (the folder of markdown files the skill maintains) ends up the way it should. The check happens after every turn.
 
-> New to PM Brain terms? The [glossary](../docs/glossary.md) covers *brain*, *ingest*, *provenance*, *hypothesis*, *decision file*, *audit trail* — anything that shows up in this doc and isn't obvious.
+> New to PM Brain terms? The [glossary](../docs/glossary.md) covers *brain*, *ingest*, *provenance*, *hypothesis*, *decision file*, *audit trail*, and anything else that shows up in this doc and isn't obvious.
 
-This file is the **operator-level quickstart**. For everything else — scenario format, ground-truth schema, harness internals, assumptions, full coverage / gap list, and how to add a scenario — see [`TESTING.md`](./TESTING.md). Design rationale lives in [`../docs/testing.md`](../docs/testing.md).
+This file is the **operator-level quickstart**. For everything else (scenario format, ground-truth schema, harness internals, assumptions, full coverage / gap list, and how to add a scenario) see [`TESTING.md`](./TESTING.md). Design rationale lives in [`../docs/testing.md`](../docs/testing.md).
 
 ## Quickstart
 
@@ -50,8 +50,8 @@ Each turn under `inputs/` is a single file: an interview transcript, a meeting n
 
 `expected.yaml` declares the assertions. Two kinds:
 
-- **Structural** — file-system checks (does this hypothesis file exist? did the decision file get updated?). Deterministic, fast, free.
-- **Content** — LLM-judge calls with a tight rubric (did the brain surface the contradiction? did the synthesis tag provenance correctly?). Non-deterministic, costs money. Reserved for things a structural check can't answer.
+- **Structural**: file-system checks (does this hypothesis file exist? did the decision file get updated?). Deterministic, fast, free.
+- **Content**: LLM-judge calls with a tight rubric (did the brain surface the contradiction? did the synthesis tag provenance correctly?). Non-deterministic, costs money. Reserved for things a structural check can't answer.
 
 See [`docs/testing.md § Scenario format`](../docs/testing.md#scenario-format) for the full ground-truth schema.
 
@@ -73,6 +73,6 @@ The harness uses real LLM calls. Cost ballpark with the default Sonnet model spl
 - Per full scenario run (10 turns + ~15 judges): ~$3–5
 - `--runs 5` of one scenario: ~$15–25
 
-Under a Claude subscription the printed cost is the **API-equivalent** price, useful as a proxy for 5-hour-window quota pressure — not real billing. Either way it's the number to optimize.
+Under a Claude subscription the printed cost is the **API-equivalent** price, useful as a proxy for 5-hour-window quota pressure, not real billing. Either way it's the number to optimize.
 
 `--max-cost` (default $20) aborts the run on cumulative overrun. Use it. Don't loop the harness in a debug session without it.

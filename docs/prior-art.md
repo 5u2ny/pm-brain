@@ -10,7 +10,7 @@ The original "personal knowledge system designed to think with, not just store i
 
 **What PM Brain borrows:** the inspectability stance. Plain-text notes. Explicit links. The system is a tool for thought, not a database to query.
 
-**What it doesn't borrow:** the unstructured graph. PM work has bounded contexts — strategy, product, users, market, org — and a clear lifecycle (hypothesis → decision). Forcing all of that through a flat note graph loses the structure that makes PM judgment legible.
+**What it doesn't borrow:** the unstructured graph. PM work has bounded contexts (strategy, product, users, market, org) and a clear lifecycle (hypothesis → decision). Forcing all of that through a flat note graph loses the structure that makes PM judgment legible.
 
 ### RAG / vector-DB memory (2023-)
 
@@ -30,7 +30,7 @@ The CLAUDE.md operating manual pattern, where a single file in the repo root tel
 
 ### Continuous Discovery + the four product risks (Teresa Torres + Marty Cagan)
 
-The discovery cadence and the canonical four risks (value, usability, feasibility, viability) come from product management's existing literature. PM Brain encodes them as scaffold defaults — every hypothesis file has the 5 risk areas as sections (the four canonical risks plus "other" for the ones that don't fit).
+The discovery cadence and the canonical four risks (value, usability, feasibility, viability) come from product management's existing literature. PM Brain encodes them as scaffold defaults. Every hypothesis file has the 5 risk areas as sections (the four canonical risks plus "other" for the ones that don't fit).
 
 **What PM Brain borrows:** the conceptual framework PMs already use.
 

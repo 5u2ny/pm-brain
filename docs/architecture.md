@@ -8,9 +8,9 @@ The skill is split into two layers that evolve independently.
 
 | Layer | Lives in | Behavior | Why |
 |---|---|---|---|
-| **Static structure** — schemas, `CLAUDE.md`, `INDEX.md`, folder tree, file templates | `.claude/skills/pm-brain/scaffold/` | Deterministic. Same every install. | Copy-paste reliability. No generation drift. Schemas can evolve without touching reasoning. |
-| **Adaptive reasoning** — mode detection, migration, interview, post-scaffold self-test | `.claude/skills/pm-brain/prompts/` | Probabilistic. Depends on inputs. | Reasoning can improve without rewriting schemas. Behavior evolves in `prompts/`, structure stays stable. |
-| **Orchestration** — when to load what | `.claude/skills/pm-brain/SKILL.md` | Glue. | Single entry point. |
+| **Static structure**: schemas, `CLAUDE.md`, `INDEX.md`, folder tree, file templates | `.claude/skills/pm-brain/scaffold/` | Deterministic. Same every install. | Copy-paste reliability. No generation drift. Schemas can evolve without touching reasoning. |
+| **Adaptive reasoning**: mode detection, migration, interview, post-scaffold self-test | `.claude/skills/pm-brain/prompts/` | Probabilistic. Depends on inputs. | Reasoning can improve without rewriting schemas. Behavior evolves in `prompts/`, structure stays stable. |
+| **Orchestration**: when to load what | `.claude/skills/pm-brain/SKILL.md` | Glue. | Single entry point. |
 
 The first version of this skill mixed both layers in one prompt. Forcing deterministic content through probabilistic generation caused inconsistencies, formatting drift, occasional missing files, path errors. Splitting them eliminates that whole class of failure.
 
@@ -78,14 +78,14 @@ Every load-bearing claim in `hypotheses/`, `decisions/`, and `knowledge/users/in
 
 | Tag | Trust |
 |---|---|
-| `[ingestion/<path>](...)` | Highest — went through synthesis, links back to `source/`. |
-| `[source/<path>](...)` | High — direct citation to a raw artifact. |
-| `(stakeholder-verbal, <name>, <date>)` | Medium — heard from a person, no recording. |
+| `[ingestion/<path>](...)` | Highest. Went through synthesis, links back to `source/`. |
+| `[source/<path>](...)` | High. Direct citation to a raw artifact. |
+| `(stakeholder-verbal, <name>, <date>)` | Medium. Heard from a person, no recording. |
 | `(intuition, PM, <date>)` | Low for external defense, useful internally. |
-| `(industry-knowledge)` | Low — accepted background, flag for replacement. |
-| `(chat, no artifact)` | Low — synthesized in-session, nothing written down. |
+| `(industry-knowledge)` | Low. Accepted background, flag for replacement. |
+| `(chat, no artifact)` | Low. Synthesized in-session, nothing written down. |
 
-The system enforces the **vocabulary**, not the workflow. Real PM work is messy: PMs have intuitions, hear things off-the-record from execs, and inherit claims with no clear pedigree. Those are legitimate inputs — the brain just makes them wear their actual provenance instead of laundering them through a fake `ingestion/` record. The auditability promise is "every claim wears its source," not "every claim was synthesized."
+The system enforces the **vocabulary**, not the workflow. Real PM work is messy: PMs have intuitions, hear things off-the-record from execs, and inherit claims with no clear pedigree. Those are legitimate inputs. The brain just makes them wear their actual provenance instead of laundering them through a fake `ingestion/` record. The auditability promise is "every claim wears its source," not "every claim was synthesized."
 
 A path-typed tag walks (in two clicks) from a decision back to a `source/` artifact. A non-path tag tells you honestly that no artifact exists. Both are auditable; only the missing tag is a bug.
 
@@ -93,7 +93,7 @@ A path-typed tag walks (in two clicks) from a decision back to a `source/` artif
 
 This is the load-bearing distinction.
 
-**Hypotheses are bets being tested.** Feature-scoped. Each file has the 5 risk areas as sections (value, usability, feasibility, viability, and "other" for the ones that don't fit the canonical four — regulatory, partnership, etc.). Each hypothesis has evidence-for, evidence-against, confidence, a test, and a decision trigger.
+**Hypotheses are bets being tested.** Feature-scoped. Each file has the 5 risk areas as sections (value, usability, feasibility, viability, and "other" for the ones that don't fit the canonical four: regulatory, partnership, and so on). Each hypothesis has evidence-for, evidence-against, confidence, a test, and a decision trigger.
 
 **Decisions are commitments made.** Append-only log. Every shipped feature has at least one. Every decision has a "what would reverse this" field, which is the most useful field a decision record can have.
 

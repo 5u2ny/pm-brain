@@ -1,16 +1,16 @@
-# Test results — most recent per-scenario runs
+# Test results: most recent per-scenario runs
 
-> One row per scenario, latest run. Snapshots committed under [`results/snapshots/`](results/snapshots/) — open any JSON to see the per-turn structural checks, judge verdicts, agent responses, and cost breakdown.
+> One row per scenario, latest run. Snapshots committed under [`results/snapshots/`](results/snapshots/). Open any JSON to see the per-turn structural checks, judge verdicts, agent responses, and cost breakdown.
 
-The harness spins up a fresh PM Brain scaffold in a temp dir, replays the scenario's cached `turn-NN-*.md` inputs through `claude -p`, runs structural checks after every turn, and runs LLM-judge checks at the end. There is no cherry-picking inside a run — every check defined in `expected.yaml` is evaluated. See [`TESTING.md`](TESTING.md) for the design.
+The harness spins up a fresh PM Brain scaffold in a temp dir, replays the scenario's cached `turn-NN-*.md` inputs through `claude -p`, runs structural checks after every turn, and runs LLM-judge checks at the end. There is no cherry-picking inside a run. Every check defined in `expected.yaml` is evaluated. See [`TESTING.md`](TESTING.md) for the design.
 
 ## Headline
 
 - **404 of 406 individual checks pass across the 17 snapshots (≈99.5%).** The split:
-  - **Structural: 329 / 329 (100%).** Every mechanical check — files exist, links resolve, evidence rows tagged with provenance, decision schemas valid, no orphan evidence, no silent demotions — passes on every snapshot. The brain's scaffolded foundation holds without exception.
+  - **Structural: 329 / 329 (100%).** Every mechanical check (files exist, links resolve, evidence rows tagged with provenance, decision schemas valid, no orphan evidence, no silent demotions) passes on every snapshot. The brain's scaffolded foundation holds without exception.
   - **Content (LLM judges): 75 / 77 (≈97%).** Two judges miss on the two longest scenarios (01 b2b-churn T9 and 02 inherited-folder T5). Specific judges and remediation status in [§ Known residuals](#known-residuals).
 - **15 of 17 scenarios pass cleanly** (every structural + every judge `verdict=PASS`); the other 2 pass all structural and all but one content judge each.
-- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost (Sonnet for turns + most judges, Opus opt-in for hard discrimination). A separate Opus comparison run on the two partial scenarios is committed under [`results/snapshots/*-opus.json`](results/snapshots/) — see [`docs/testing-decisions.md`](../docs/testing-decisions.md) for the cost-vs-quality reading.
+- **Total spend** to produce the snapshot set: **~$37** of API-equivalent cost (Sonnet for turns + most judges, Opus opt-in for hard discrimination). A separate Opus comparison run on the two partial scenarios is committed under [`results/snapshots/*-opus.json`](results/snapshots/). See [`docs/testing-decisions.md`](../docs/testing-decisions.md) for the cost-vs-quality reading.
 
 ## Scoreboard
 
@@ -43,15 +43,15 @@ Two per-judge failures persist on the longest scenarios. Both are documented in 
 
 ### 01-b2b-churn → T9 `insight_promoted_with_dissent_preserved`
 
-The judge checks that when a recurring user-insight gets promoted to `knowledge/users/insights.md`, the **dissenting** evidence (the one interview that disagreed) is preserved as a row under `## Contradictions` — not flattened into the synthesis. In the snapshot run, the agent promoted the insight with two of three supporting interviews but the third (Notion / Priya's ops-risk subteam) was missing from both the `## Active themes` evidence rows AND the dissent block.
+The judge checks that when a recurring user-insight gets promoted to `knowledge/users/insights.md`, the **dissenting** evidence (the one interview that disagreed) is preserved as a row under `## Contradictions`, not flattened into the synthesis. In the snapshot run, the agent promoted the insight with two of three supporting interviews but the third (Notion / Priya's ops-risk subteam) was missing from both the `## Active themes` evidence rows AND the dissent block.
 
-**Remediation status:** the `CLAUDE.md § Memory promotion` rule already requires "Counter-signals get preserved under `## Contradictions` in the same file, not flattened" — the prompt covers the case but the agent collapsed the third source. The next sharpening pass would add an explicit promotion checklist ("N supporters listed? all named by source slug? any non-supporters from the same population? if so, dissent row required"). Pending; not done in this snapshot.
+**Remediation status:** the `CLAUDE.md § Memory promotion` rule already requires "Counter-signals get preserved under `## Contradictions` in the same file, not flattened". The prompt covers the case but the agent collapsed the third source. The next sharpening pass would add an explicit promotion checklist ("N supporters listed? all named by source slug? any non-supporters from the same population? if so, dissent row required"). Pending; not done in this snapshot.
 
 ### 02-inherited-folder → T5 `risk_area_updated`
 
 The judge target is "after a risk-relevant ingestion, the affected hypothesis or feature file shows an updated `Risks` / `Open questions` block." Across 9 reruns, the failure mode varies: sometimes the agent updates the right file but uses paraphrasing the judge doesn't accept as evidence of the update; sometimes the judge call itself returns `error=claude_not_found` (a transient harness subprocess flake, not a quality fail).
 
-The same scenario also produced an `all_internal_links_valid` failure in earlier runs — agent used `../product/metrics.md` from `knowledge/strategy.md` (one too many `..`'s, pointing above `knowledge/` to a non-existent top-level `product/`). The linking-rules table in `CLAUDE.md` did not have a row for depth-1 files like `knowledge/strategy.md`, so the agent extrapolated wrong. **Fixed in this commit** — `scaffold/CLAUDE.md` and `example-brain/CLAUDE.md` now have the depth-1 row and a worked example calling out the failure pattern. A re-run with the patch is queued; if it lands cleanly the snapshot will be updated and this section will move to docs/testing-decisions.md as a resolved fix.
+The same scenario also produced an `all_internal_links_valid` failure in earlier runs. Agent used `../product/metrics.md` from `knowledge/strategy.md` (one too many `..`'s, pointing above `knowledge/` to a non-existent top-level `product/`). The linking-rules table in `CLAUDE.md` did not have a row for depth-1 files like `knowledge/strategy.md`, so the agent extrapolated wrong. **Fixed in this commit:** `scaffold/CLAUDE.md` and `example-brain/CLAUDE.md` now have the depth-1 row and a worked example calling out the failure pattern. A re-run with the patch is queued; if it lands cleanly the snapshot will be updated and this section will move to docs/testing-decisions.md as a resolved fix.
 
 ## How to reproduce
 
@@ -66,7 +66,7 @@ python tests/harness/run_all.py
 python tests/harness/run_all.py --runs 5 --max-cost 100
 ```
 
-Each invocation writes a fresh JSON under [`results/`](results/) (gitignored by default). The committed [`results/snapshots/`](results/snapshots/) directory is the latest representative run per scenario — re-running locally will produce timestamped peers, not overwrites.
+Each invocation writes a fresh JSON under [`results/`](results/) (gitignored by default). The committed [`results/snapshots/`](results/snapshots/) directory is the latest representative run per scenario. Re-running locally will produce timestamped peers, not overwrites.
 
 ## Model split
 
