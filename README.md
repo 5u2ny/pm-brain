@@ -4,8 +4,6 @@
 
 **A second brain for product managers.** Plain markdown files in a folder on your laptop. Claude reads them before answering, writes to them after, sweeps them every Friday. No vector DB. No cloud. No agent memory tricks.
 
-> **Fork / learning context:** I keep this public fork as part of my AI-product operating-system research, connected to my resume focus on PRDs, stakeholder communication, automation workflows, and agent-assisted product work that stays inspectable instead of becoming a black box.
-
 You manage one product. Your context is scattered across Notion, Linear, Slack, your dashboards, and your head. You ship a feature. Six weeks later, nobody remembers why you killed the other option. PM Brain fixes that.
 
 > **See it in action:** [A week with PM Brain: Lena's first five days](./docs/walkthrough.md) is a short story of one PM using it on a real team. New here? Start there.
